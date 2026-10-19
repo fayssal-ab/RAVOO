@@ -15,7 +15,7 @@ const PODIUM = [
 
 const PODIUM_ALT: Record<number, string> = { 1: "King", 2: "Prince", 3: "Aristocrat" };
 
-const points = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " pts";
+const points = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " pts";
 
 const money = (n: number) => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 

@@ -18,7 +18,7 @@ async function upstashLimit(bucket: string, max: number, windowSec: number): Pro
     const key = `rl:${bucket}`;
     const incr = await fetch(`${url}/incr/${encodeURIComponent(key)}`, {
       headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
+      cache: "no-store", signal: AbortSignal.timeout(4000),
     });
     if (!incr.ok) throw new Error("rate_limit_backend_failed");
     const { result } = (await incr.json()) as { result: number };
@@ -26,7 +26,7 @@ async function upstashLimit(bucket: string, max: number, windowSec: number): Pro
     if (result === 1) {
       const expire = await fetch(`${url}/expire/${encodeURIComponent(key)}/${windowSec}`, {
         headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
+        cache: "no-store", signal: AbortSignal.timeout(4000),
       });
       if (!expire.ok) throw new Error("rate_limit_expiry_failed");
     }

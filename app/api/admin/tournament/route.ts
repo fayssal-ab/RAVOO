@@ -5,7 +5,7 @@ import { logAudit } from "@/lib/audit";
 import { ERROR_TEXT } from "@/lib/errors";
 import { isSameOrigin, json, jsonError } from "@/lib/http";
 import {
-  addPlayerManually, cancelRoll, closeRegistration, confirmRoll, createKo, focusNext, openRegistration,
+  addPlayerManually, cancelRoll, closeRegistration, confirmRoll, createKo, disqualifyPlayer, ensureKoSchema, focusNext, openRegistration,
   recordBattleResult, resetKo, rollPlayers, startBattle,
 } from "@/lib/knockout";
 import { ensureChatSubscription } from "@/lib/kickApi";
@@ -27,6 +27,7 @@ const Body = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.enum(["open", "close", "reset", "roll", "confirm", "cancel_roll", "start", "next"]), id: Id }),
   z.object({ action: z.literal("result"), id: Id, matchId: z.number().int().positive(), p1: Bonus, p2: Bonus }),
+  z.object({ action: z.literal("disqualify"), id: Id, participantId: z.number().int().positive() }),
   z.object({ action: z.literal("add_player"), id: Id, username: z.string().trim().min(1).max(40), slot: z.string().trim().max(80).default("") }),
 ]);
 
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
     return jsonError("invalid_body", 400);
   }
   try {
+    await ensureKoSchema();
     let result: unknown = null;
     switch (body.action) {
       case "create": result = { id: await createKo({ title: body.title, prize: body.prize, size: body.size, prizes: body.prizes }) }; break;
@@ -56,6 +58,7 @@ export async function POST(request: Request) {
       case "start": result = { matchId: await startBattle(body.id) }; break;
       case "next": result = { matchId: await focusNext(body.id) }; break;
       case "result": result = await recordBattleResult(body.id, body.matchId, body.p1, body.p2); break;
+      case "disqualify": result = await disqualifyPlayer(body.id, body.participantId); break;
       case "add_player": result = await addPlayerManually(body.username, body.slot ? await findSlotByName(body.slot) : null); break;
     }
     await logAudit("admin", `ko.${body.action}`, "id" in body ? String(body.id) : "", { ...body, result });

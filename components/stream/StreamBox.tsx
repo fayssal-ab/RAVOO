@@ -23,7 +23,6 @@ export function StreamBox({ live }: { live: LiveStatus }) {
             title="RAVONEVERSLEEPS live on Kick"
             className="absolute inset-0 size-full"
             allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
           />
         ) : (
           <a href={KICK_URL} target="_blank" rel="noopener noreferrer" className="group absolute inset-0 block overflow-hidden">

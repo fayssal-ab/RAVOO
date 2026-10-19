@@ -46,9 +46,9 @@ export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string;
               peeks, holds, then pulls himself up (clipped at the reels' edge) */}
           <div className="absolute inset-x-[-15%] -top-[25%] bottom-0 overflow-hidden">
             <motion.div
-              className="absolute inset-x-[13%] bottom-0 top-[20%]"
-              initial={{ y: "110%" }}
-              animate={ready ? { y: reduce ? "0%" : ["110%", "62%", "66%", "0%"] } : undefined}
+              className="hero-intro absolute inset-x-[13%] bottom-0 top-[20%]"
+              initial={false}
+              animate={ready ? (reduce ? { opacity: 1 } : { opacity: [0, 1, 1, 1], y: ["110%", "62%", "66%", "0%"] }) : undefined}
               transition={{ delay: reduce ? 0 : CLIMB_AT, duration: reduce ? 0 : 1.25, times: [0, 0.32, 0.5, 1], ease: [0.3, 0.8, 0.3, 1.1] }}
             >
               <Image src="/media/ravo-mascot.webp" alt="Ravo the pug" fill priority sizes="288px" className="animate-dance object-contain drop-shadow-[0_20px_40px_rgb(0_0_0/0.6)]" />
@@ -80,10 +80,10 @@ export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string;
               <motion.span
                 key={i}
                 aria-hidden
-                className="neon-text inline-block"
-                initial={{ opacity: 0, y: -50 }}
-                animate={ready ? { opacity: 1, y: 0 } : undefined}
-                transition={{ delay: 2.1 + i * 0.04, type: "spring", stiffness: 300, damping: 14 }}
+                className="hero-intro neon-text inline-block"
+                initial={false}
+                animate={ready ? (reduce ? { opacity: 1 } : { opacity: [0, 1], y: [-50, 0] }) : undefined}
+                transition={{ delay: reduce ? 0 : 1 + i * 0.04, type: "spring", stiffness: 300, damping: 14 }}
               >
                 {ch}
               </motion.span>
@@ -91,12 +91,12 @@ export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string;
           </span>
         </h1>
 
-        <motion.p initial={{ opacity: 0 }} animate={ready ? { opacity: 1 } : undefined} transition={{ delay: 2.4 }} className="mx-auto mt-6 max-w-xl text-base text-text/80 sm:text-lg">
+        <motion.p initial={false} animate={ready ? { opacity: [0, 1] } : undefined} transition={{ delay: reduce ? 0 : 0.35 }} className="hero-intro mx-auto mt-6 max-w-xl text-base text-text/80 sm:text-lg">
           Play on Qzino with code <span className="font-mono font-bold text-neon">{code}</span> for a <b>$50 bonus</b>, monthly wager leaderboards,
           milestones and a points store that pays you back.
         </motion.p>
 
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={ready ? { opacity: 1, y: 0 } : undefined} transition={{ delay: 2.55 }} className="mt-8 flex flex-col items-center gap-4 sm:flex-row">
+        <motion.div initial={false} animate={ready ? (reduce ? { opacity: 1 } : { opacity: [0, 1], y: [16, 0] }) : undefined} transition={{ delay: reduce ? 0 : 0.5 }} className="hero-intro mt-8 flex flex-col items-center gap-4 sm:flex-row">
           <a href={qzinoUrl} target="_blank" rel="noopener noreferrer sponsored" className="btn btn-neon px-7 py-4 text-base">
             Play on Qzino <ArrowRight className="size-5" />
           </a>
@@ -107,16 +107,16 @@ export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string;
           href={qzinoUrl}
           target="_blank"
           rel="noopener noreferrer sponsored"
-          initial={{ opacity: 0 }}
-          animate={ready ? { opacity: 1 } : undefined}
-          transition={{ delay: 2.7 }}
-          className="mt-6 inline-flex items-center gap-3 rounded-full border border-line-hot bg-black/40 px-4 py-2 backdrop-blur transition hover:border-neon"
+          initial={false}
+          animate={ready ? { opacity: [0, 1] } : undefined}
+          transition={{ delay: reduce ? 0 : 0.65 }}
+          className="hero-intro mt-6 inline-flex items-center gap-3 rounded-full border border-line-hot bg-black/40 px-4 py-2 backdrop-blur transition hover:border-neon"
         >
           <span className="font-pixel text-[0.65rem] uppercase tracking-[0.2em] text-muted">Official partner</span>
           <QzinoLogo className="h-6 w-auto" />
         </motion.a>
 
-        <motion.div initial={{ opacity: 0 }} animate={ready ? { opacity: 1 } : undefined} transition={{ delay: 2.8 }} className="mt-6">
+        <motion.div initial={false} animate={ready ? { opacity: [0, 1] } : undefined} transition={{ delay: reduce ? 0 : 0.75 }} className="hero-intro mt-6">
           <Link href="/leaderboard" className="inline-flex items-center gap-2 font-head text-sm font-semibold uppercase tracking-[0.2em] text-text/70 transition hover:text-neon">
             <Trophy className="size-4 text-gold" />
             {pool ? <>{pool} monthly leaderboard · view</> : <>View the leaderboard</>}

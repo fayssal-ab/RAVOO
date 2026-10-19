@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Dices, Play, SkipForward, UserPlus } from "lucide-react";
 import { confirmDialog } from "@/components/ui/confirm";
-import type { KoMatch, KoState } from "@/lib/knockout";
+import type { KoMatch, KoParticipant, KoState } from "@/lib/knockout";
 import { Bracket, Counter, ParticipantRow, Podium, RollReveal, VsScreen, roundName } from "./parts";
 import { useJoinReader, type ReaderStatus } from "./useJoinReader";
 import { useKoState } from "./useKoState";
@@ -21,7 +21,7 @@ const READER: Record<ReaderStatus, { label: string; tone: string }> = {
 const OUTCOME: Record<string, string> = {
   registered: "registered", rerolled: "slot changed", duplicate_message: "duplicate ignored", no_tournament: "no tournament",
   registration_closed: "registration closed", full: "full", locked_in_bracket: "locked in bracket", eliminated: "eliminated, ignored",
-  pending_roll: "being rolled, ignored", no_slots: "slot catalogue empty!", processing_failed: "server error", network_error: "network error",
+  pending_roll: "being rolled, ignored", disqualified: "disqualified, ignored", no_slots: "slot catalogue empty!", processing_failed: "server error", network_error: "network error",
 };
 
 const SIZES = [4, 8, 16, 32] as const;
@@ -60,6 +60,11 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
       setBusy(null);
     }
   }, [t, refresh]);
+
+  const disqualify = useCallback((p: KoParticipant) => {
+    const where = p.state === "in_knockout" ? " Their current battle is forfeited to the opponent." : " They leave the pool and their seat frees up.";
+    act("disqualify", { participantId: p.id }, `Disqualify ${p.username}?${where} They can't !join this tournament again.`);
+  }, [act]);
 
   const pool = useMemo(() => state?.participants.filter((p) => p.state === "registered") ?? [], [state]);
   const focus: KoMatch | null = state?.focus ?? null;
@@ -197,7 +202,7 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
             <p className="text-sm text-dim">{t.status === "open" ? "Waiting for the first !join…" : "Open registration to collect !join from chat."}</p>
           ) : (
             <ol className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
-              {state.participants.map((p, i) => <ParticipantRow key={p.id} p={p} index={i} />)}
+              {state.participants.map((p, i) => <ParticipantRow key={p.id} p={p} index={i} onDisqualify={disqualify} />)}
             </ol>
           )}
           {reader.events.length > 0 && (
@@ -231,7 +236,7 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
         )}
         {(tab === "qualified" || tab === "eliminated") && (
           <ol className="grid grid-cols-1 gap-2 md:grid-cols-2">
-            {state.participants.filter((p) => (tab === "eliminated" ? p.state === "eliminated" : p.state === "in_knockout" || p.state === "champion")).map((p, i) => <ParticipantRow key={p.id} p={p} index={i} />)}
+            {state.participants.filter((p) => (tab === "eliminated" ? p.state === "eliminated" : p.state === "in_knockout" || p.state === "champion")).map((p, i) => <ParticipantRow key={p.id} p={p} index={i} onDisqualify={disqualify} />)}
           </ol>
         )}
         {tab === "final" && (

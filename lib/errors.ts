@@ -34,6 +34,8 @@ export const ERROR_TEXT: Record<string, string> = {
   ko_sealed: "The bracket is sealed (byes were given), registration can't reopen.",
   ko_not_open: "Registration isn't open.",
   roll_pending: "Confirm or cancel the current roll first.",
+  already_disqualified: "That player is already disqualified.",
+  player_out: "That player is already out of the tournament.",
   first_round_full: "Every first-round match already has players.",
   not_enough_players: "Not enough waiting players to roll.",
   no_pending_roll: "There is no roll to confirm.",

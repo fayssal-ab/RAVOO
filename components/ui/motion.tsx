@@ -1,56 +1,29 @@
 "use client";
 
-import { animate, motion, useInView, useMotionValue, useReducedMotion, useTransform } from "motion/react";
+import { animate, motion, useMotionValue, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-/** Fade/slide in when scrolled into view. */
-export function Reveal({ children, delay = 0, y = 28, className }: { children: ReactNode; delay?: number; y?: number; className?: string }) {
-  return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
+/**
+ * Fade/slide in when scrolled into view. Pure CSS (scroll-driven animation,
+ * `.reveal` in globals.css): content is visible without JavaScript, in
+ * browsers without support and with reduced motion.
+ */
+export function Reveal({ children, className = "" }: { children: ReactNode; delay?: number; y?: number; className?: string }) {
+  return <div className={`reveal ${className}`}>{children}</div>;
 }
 
-/** Children appear one after the other. */
-export function Stagger({ children, className, step = 0.07 }: { children: ReactNode[]; className?: string; step?: number }) {
+/** Children appear as they scroll in (same CSS reveal, per child). */
+export function Stagger({ children, className }: { children: ReactNode[]; className?: string; step?: number }) {
   return (
     <div className={className}>
-      {children.map((c, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, y: 24, scale: 0.98 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.55, delay: i * step, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {c}
-        </motion.div>
-      ))}
+      {children.map((c, i) => <div key={i} className="reveal">{c}</div>)}
     </div>
   );
 }
 
-/** Number that counts up when visible. */
+/** Formatted number (kept as a component so callers stay unchanged). */
 export function CountUp({ value, prefix = "", suffix = "", decimals = 0, className }: { value: number; prefix?: string; suffix?: string; decimals?: number; className?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true });
-  const reduce = useReducedMotion();
-  const mv = useMotionValue(0);
-  const text = useTransform(mv, (v) => prefix + v.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + suffix);
-  useEffect(() => {
-    if (!inView) return;
-    if (reduce) { mv.set(value); return; }
-    const controls = animate(mv, value, { duration: 1.8, ease: [0.16, 1, 0.3, 1] });
-    return () => controls.stop();
-  }, [inView, value, mv, reduce]);
-  return <motion.span ref={ref} className={className}>{text}</motion.span>;
+  return <span className={className}>{prefix + value.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + suffix}</span>;
 }
 
 /** Card that tracks the cursor for the .spotlight glow and tilts slightly. */

@@ -27,11 +27,14 @@ const STATE: Record<KoParticipant["state"], { label: string; tone: string }> = {
   champion: { label: "Champion", tone: "border-gold/60 text-gold" },
 };
 
-export function StateBadge({ state }: { state: KoParticipant["state"] }) {
+export function StateBadge({ state, dq = false }: { state: KoParticipant["state"]; dq?: boolean }) {
+  if (dq) return <span className="rounded-full border border-danger/60 bg-danger/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-danger">Disqualified</span>;
   return <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${STATE[state].tone}`}>{STATE[state].label}</span>;
 }
 
-export function ParticipantRow({ p, index }: { p: KoParticipant; index: number }) {
+/** `onDisqualify` (admin dashboard only) adds the DQ control. */
+export function ParticipantRow({ p, index, onDisqualify }: { p: KoParticipant; index: number; onDisqualify?: (p: KoParticipant) => void }) {
+  const canDq = onDisqualify && !p.disqualified && (p.state === "registered" || p.state === "in_knockout");
   return (
     <li className={`entrant-in flex min-w-0 items-center gap-3 rounded-xl border border-line bg-bg-2 p-2 ${p.state === "eliminated" ? "opacity-45" : ""}`}>
       <span className="w-6 text-center font-mono text-xs text-dim">{index + 1}</span>
@@ -40,7 +43,18 @@ export function ParticipantRow({ p, index }: { p: KoParticipant; index: number }
         <span className="block truncate font-head font-bold">{p.username}</span>
         <span className="block truncate text-xs text-dim">{p.slot_name}{p.slot_provider ? ` · ${p.slot_provider}` : ""}</span>
       </span>
-      <StateBadge state={p.state} />
+      <StateBadge state={p.state} dq={p.disqualified} />
+      {canDq && (
+        <button
+          type="button"
+          onClick={() => onDisqualify(p)}
+          className="grid h-9 shrink-0 place-items-center rounded-lg border border-danger/40 px-2.5 font-head text-[11px] font-bold uppercase tracking-wider text-danger transition hover:bg-danger/10"
+          aria-label={`Disqualify ${p.username}`}
+          title="Disqualify"
+        >
+          DQ
+        </button>
+      )}
     </li>
   );
 }

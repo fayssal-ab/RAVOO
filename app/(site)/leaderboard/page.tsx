@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ReelNumber } from "@/components/fx/ReelNumber";
 import { BoardExplorer, Podium } from "@/components/leaderboard/Board";
 import { EmptyState } from "@/components/ui/bits";
 import { CopyCode } from "@/components/ui/CopyCode";
@@ -34,7 +33,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   const rules = board?.source === "qboards" ? [
     "Rankings and prizes come from the official Q-boards leaderboard.",
     "Your rank follows the points awarded by Q-boards during the event.",
-    "Scores and prizes sync every 6 hours. Check the official board for the latest results and payout rules.",
+    "Scores and prizes sync every 15 minutes. Check the official board for the latest results and payout rules.",
     "Usernames are partly hidden for privacy.",
   ] : RULES;
   const rows = (board?.rows ?? []).map((r) => ({ ...r, score: Number(r.wagered), prize: r.prize != null ? Number(r.prize) : null }));
@@ -60,14 +59,17 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
         <>
           {/* prize headline */}
           <header className="pb-10 pt-4 text-center">
+            <p className="eyebrow mb-2">Qzino {board.scoreKind === "points" ? "points" : "wager"} leaderboard · prize pool</p>
             <p className="font-mono text-6xl font-bold text-gold drop-shadow-[0_0_30px_rgb(255_215_106/0.35)] sm:text-8xl">
-              <ReelNumber value={formatMoney(period.prize_pool)} />
+              {formatMoney(period.prize_pool)}
             </p>
             <h1 className="mt-2 font-display text-3xl sm:text-4xl"><span className="chrome">{period.title}</span></h1>
-            {period.state === "live" && <p className="eyebrow mt-3">● Live</p>}
+            <p className="mt-2 text-sm text-muted">
+              {period.state === "live" ? <span className="text-neon">● Live</span> : period.state === "upcoming" ? "Starts soon" : "Ended"} · {fmtDate(period.starts_at)} – {fmtDate(period.ends_at)} (UTC)
+            </p>
             {board.source === "qboards" && board.syncedAt && (
               <p className="mt-3 text-xs text-muted">
-                Updated every 6 hours · Last sync {new Date(board.syncedAt.replace(" ", "T") + "Z").toLocaleString("en-GB", { timeZone: "UTC" })} UTC
+                Updated every 15 minutes · Last sync {new Date(board.syncedAt.replace(" ", "T") + "Z").toLocaleString("en-GB", { timeZone: "UTC" })} UTC
                 {board.syncDelayed && " · Update delayed"}
                 {" · "}<a href={QBOARDS_URL} target="_blank" rel="noopener noreferrer" className="inline-block py-2 underline">Official board</a>
               </p>

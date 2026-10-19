@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { isAdminSession } from "@/lib/admin";
 import { isSameOrigin, json, jsonError } from "@/lib/http";
-import { JOIN_RE, recordJoin } from "@/lib/knockout";
+import { ensureKoSchema, JOIN_RE, recordJoin } from "@/lib/knockout";
 import { findSlotByName } from "@/lib/slots";
 import { withTx } from "@/lib/tx";
 
@@ -27,6 +27,7 @@ export async function POST(request: Request) {
   }
   if (!JOIN_RE.test(body.content)) return json({ ok: true, outcome: "not_command" });
   try {
+    await ensureKoSchema();
     const slot = await findSlotByName(body.content.replace(/^\s*!join/i, ""));
     const result = await withTx((conn) => recordJoin(conn, { kickUserId: String(body.userId), username: body.username, messageId: `kick:${body.messageId}`, slot }));
     return json({ ok: true, ...result });

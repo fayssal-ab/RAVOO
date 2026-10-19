@@ -30,7 +30,11 @@ export const viewport: Viewport = { themeColor: "#040605" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${metal.variable} ${chakra.variable} ${sora.variable} ${mono.variable} ${pixel.variable}`}>
+    <html lang="en" className={`${metal.variable} ${chakra.variable} ${sora.variable} ${mono.variable} ${pixel.variable}`} suppressHydrationWarning>
+      <head>
+        {/* marks JS as available before first paint (see .hero-intro in globals.css) */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
       <body>{children}</body>
     </html>
   );

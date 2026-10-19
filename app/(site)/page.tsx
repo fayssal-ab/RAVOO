@@ -3,7 +3,6 @@ import { QzinoLogo } from "@/components/ui/QzinoLogo";
 import Link from "next/link";
 import { ArrowRight, Coins, Gift, Timer } from "lucide-react";
 import { Hero } from "@/components/home/Hero";
-import { ReelNumber } from "@/components/fx/ReelNumber";
 import { PromoSteps } from "@/components/promo/PromoSteps";
 import { StreamBox } from "@/components/stream/StreamBox";
 import { Ticker } from "@/components/home/Ticker";
@@ -99,7 +98,7 @@ export default async function HomePage() {
               <div>
                 <p className="eyebrow !text-neon-bright">Monthly leaderboard</p>
                 <p className="mt-2 font-mono text-5xl font-bold text-gold drop-shadow-[0_0_20px_rgb(255_215_106/0.35)] sm:text-6xl">
-                  {period ? <ReelNumber value={formatMoney(period.prize_pool)} /> : "Soon"}
+                  {period ? formatMoney(period.prize_pool) : "Soon"}
                 </p>
                 <p className="mt-2 flex items-center gap-2 font-head text-lg font-bold">
                   <Timer className="size-5 text-neon" />

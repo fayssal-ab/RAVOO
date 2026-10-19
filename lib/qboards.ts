@@ -28,7 +28,7 @@ export async function getQboardsBoard(limit: number): Promise<Board | null> {
   const now = Date.now();
   return {
     source: "qboards", scoreKind: "points", syncedAt: String(record.synced_at),
-    syncDelayed: now - Date.parse(String(record.synced_at).replace(" ", "T") + "Z") > 9 * 60 * 60 * 1000,
+    syncDelayed: now - Date.parse(String(record.synced_at).replace(" ", "T") + "Z") > 45 * 60 * 1000,
     period: {
       id: 0, title: snapshot.title,
       starts_at: snapshot.startsAt.slice(0, 19).replace("T", " "),

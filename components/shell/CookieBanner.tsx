@@ -39,18 +39,15 @@ export function CookieBanner() {
           transition={{ type: "spring", stiffness: 260, damping: 26 }}
           className="fixed inset-x-3 bottom-3 z-[90] mx-auto max-w-xl sm:bottom-5"
         >
-          <div className="panel neon-frame is-on relative overflow-hidden p-5 shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)] sm:p-6">
-            <div className="flex gap-4">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-neon/10 text-neon"><Cookie className="size-6" /></span>
-              <div className="min-w-0">
-                <p className="font-head text-lg font-bold uppercase tracking-wide">We use cookies</p>
-                <p className="mt-1 text-sm leading-relaxed text-muted">
-                  Cookies keep you signed in and remember your settings. Accept all, or keep only the essential ones. Details in our{" "}
-                  <Link href="/privacy" className="text-neon underline-offset-2 hover:underline">Privacy Policy</Link>.
-                </p>
-              </div>
+          <div className="panel relative overflow-hidden p-4 shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)] sm:p-5">
+            <div className="flex gap-3">
+              <span className="hidden size-10 shrink-0 place-items-center rounded-xl bg-neon/10 text-neon sm:grid"><Cookie className="size-5" /></span>
+              <p className="min-w-0 text-sm leading-relaxed text-muted">
+                <span className="font-head font-bold text-text">Cookies.</span> We use them to keep you signed in and remember your settings.{" "}
+                <Link href="/privacy" className="text-neon underline underline-offset-2">Privacy Policy</Link>
+              </p>
             </div>
-            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:justify-end">
               <button type="button" onClick={() => choose("essential")} className="btn btn-ghost btn-sm">Essential only</button>
               <button type="button" onClick={() => choose("all")} className="btn btn-neon btn-sm">Accept all</button>
             </div>

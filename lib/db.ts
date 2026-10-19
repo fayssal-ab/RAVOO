@@ -35,6 +35,9 @@ export function getPool(): Pool {
     maxIdle: 2,
     idleTimeout: 20000,
     enableKeepAlive: true,
+    // fail fast when the database is unreachable so pages show their error
+    // state instead of a loading screen that never ends
+    connectTimeout: 6000,
     // DECIMAL columns come back as strings, never JS numbers — money must
     // never round-trip through a float.
     decimalNumbers: false,

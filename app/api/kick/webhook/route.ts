@@ -1,7 +1,7 @@
 import { json, jsonError } from "@/lib/http";
 import { verifyKickWebhook } from "@/lib/kickApi";
 import { logChat } from "@/lib/kickChatLog";
-import { JOIN_RE, recordJoin } from "@/lib/knockout";
+import { ensureKoSchema, JOIN_RE, recordJoin } from "@/lib/knockout";
 import { findSlotByName } from "@/lib/slots";
 import { withTx } from "@/lib/tx";
 
@@ -26,6 +26,7 @@ export async function POST(request: Request) {
     return json({ ok: true });
   }
   try {
+    await ensureKoSchema();
     const slot = await findSlotByName(e.content.replace(/^\s*!join/i, ""));
     const result = await withTx((conn) => recordJoin(conn, {
       kickUserId: String(e.sender!.user_id), username, messageId: `kick:${e.message_id}`, slot,

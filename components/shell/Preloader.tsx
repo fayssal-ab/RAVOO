@@ -7,9 +7,10 @@ import { announceReady } from "./siteReady";
 // neon ring and a progress bar that follows the real loading. It stays until
 // the page, fonts and on-screen images are loaded and decoded so the site
 // appears complete, never popping in. Shown at least MIN_MS so it's always
-// seen, capped at MAX_MS so a slow image never blocks the site.
-const MIN_MS = 1400;
-const MAX_MS = 7000;
+// seen, capped at MAX_MS so a slow image never blocks the site. A CSS
+// failsafe ([data-preloader] in globals.css) hides it even if JS never runs.
+const MIN_MS = 900;
+const MAX_MS = 4500;
 
 function visibleImages(): HTMLImageElement[] {
   return Array.from(document.images).filter((img) => {
