@@ -1,13 +1,15 @@
 import "server-only";
-import type { Pool, PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
+import type { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import { getPool } from "./db";
 import { d } from "./money";
 import { AppError, withTx } from "./tx";
+import { liveEventScore } from "./qboards";
 
-// Wager milestones, monthly. A viewer's wager for the month is the sum of
-// their wagers on the leaderboard periods that start that month (UTC),
-// matched by their Qzino username. Each milestone can be claimed once per
-// month; the team checks and pays it from Admin → Milestones.
+// Milestones, monthly, on Q-boards points: a viewer's progress is their
+// points in the leaderboard event running now (synced from Q-boards, matched
+// by Qzino username). Thresholds (min_wager column) are points. Each
+// milestone can be claimed once per event month ("YYYY-MM" of the event's
+// start); the team checks and pays it from Admin → Milestones.
 
 export interface Milestone { id: number; name: string; min_wager: string; reward: string }
 export interface Claim {
@@ -40,13 +42,10 @@ export async function listMilestones(): Promise<Milestone[]> {
   return rows.map((r) => ({ id: Number(r.id), name: String(r.name), min_wager: String(r.min_wager), reward: String(r.reward) }));
 }
 
-/** Wager this month (periods starting in `month`) for a Qzino username (decimal string). */
-export async function monthlyWager(qzinoUsername: string, month = monthKey(), conn: Pool | PoolConnection = getPool()): Promise<string> {
-  if (!qzinoUsername) return "0";
-  const [rows] = await conn.query<RowDataPacket[]>(
-    `SELECT COALESCE(SUM(e.wagered), 0) AS total FROM lb_entries e JOIN lb_periods p ON p.id = e.period_id
-      WHERE LOWER(e.username) = LOWER(?) AND DATE_FORMAT(p.starts_at, '%Y-%m') = ?`, [qzinoUsername, month]);
-  return String(rows[0].total);
+/** Progress this month: points in the running Q-boards event (null = no event running). */
+export async function monthlyProgress(qzinoUsername: string): Promise<{ points: string; month: string; title: string; endsAt: string } | null> {
+  const live = await liveEventScore(qzinoUsername);
+  return live ? { points: live.score, month: live.month, title: live.title, endsAt: live.endsAt } : null;
 }
 
 /** This month's claims of an account, by milestone. */
@@ -58,7 +57,6 @@ export async function claimsFor(accountId: number, month = monthKey()): Promise<
 
 export async function claimMilestone(accountId: number, milestoneId: number): Promise<number> {
   await ensureMonthly();
-  const month = monthKey();
   return withTx(async (conn) => {
     const [acc] = await conn.query<RowDataPacket[]>("SELECT qzino_username, banned FROM user_accounts WHERE id = ? FOR UPDATE", [accountId]);
     if (!acc[0]) throw new AppError("not_signed_in");
@@ -67,7 +65,10 @@ export async function claimMilestone(accountId: number, milestoneId: number): Pr
     if (!qzino) throw new AppError("no_qzino");
     const [ms] = await conn.query<RowDataPacket[]>("SELECT id, name, min_wager, reward FROM milestones WHERE id = ?", [milestoneId]);
     if (!ms[0]) throw new AppError("not_found");
-    const wagered = await monthlyWager(qzino, month, conn);
+    const progress = await monthlyProgress(qzino);
+    if (!progress) throw new AppError("no_live_board");
+    const month = progress.month;
+    const wagered = progress.points;
     if (d(wagered).lt(d(ms[0].min_wager))) throw new AppError("not_reached");
     const [dupe] = await conn.query<RowDataPacket[]>("SELECT id FROM milestone_claims WHERE account_id = ? AND milestone_id = ? AND claim_month = ?", [accountId, milestoneId, month]);
     if (dupe[0]) throw new AppError("already_claimed");

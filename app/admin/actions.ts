@@ -6,7 +6,6 @@ import { addBonus, createHunt, deleteBonus, deleteHunt, finishHunt, moveBonus, r
 import { syncCatalog, upgradeTypedSlots } from "@/lib/slots";
 import { deleteClaim, resolveClaim, saveMilestones } from "@/lib/milestones";
 import { addSlot, deleteSlot } from "@/lib/stream";
-import { deletePeriod, removeEntry, savePeriod, upsertEntries } from "@/lib/leaderboard";
 import { cancelRaffle, createRaffle, deleteRaffle, drawRaffle } from "@/lib/raffles";
 import { deleteStoreItem, resolveRedemption, saveStoreItem } from "@/lib/store";
 import { AppError, DECIMAL_20_8, parseForm, zId, zLevel, zPoints, zRequiredText, zText, zUtcDateTime } from "@/lib/tx";
@@ -36,42 +35,6 @@ function parseLines(raw: string, amount: RegExp): { name: string; value: string 
   }
   if (!out.length) throw new AppError("invalid_input", "no rows found");
   return out;
-}
-
-// ── leaderboard ────────────────────────────────────────────────────────
-export async function savePeriodAction(form: FormData) {
-  await adminAction({ path: "/admin/leaderboard", audit: "period.save", revalidate: ["/leaderboard", "/"] }, async () => {
-    const v = parseForm(z.object({ id: optionalId, title: zRequiredText(120), starts_at: zUtcDateTime, ends_at: zUtcDateTime, prizes: zText(2000) }), form);
-    const prizes = v.prizes.split(/[\s,;]+/).filter(Boolean);
-    for (const p of prizes) if (!DECIMAL_20_8.test(p)) throw new AppError("invalid_input", `prize "${p}"`);
-    return { id: await savePeriod(v.id, { title: v.title, starts_at: v.starts_at, ends_at: v.ends_at, prizes }) };
-  });
-}
-
-export async function deletePeriodAction(form: FormData) {
-  await adminAction({ path: "/admin/leaderboard", audit: "period.delete", revalidate: ["/leaderboard", "/"] }, async () => {
-    const { id } = parseForm(z.object({ id: zId }), form);
-    await deletePeriod(id);
-    return { id };
-  });
-}
-
-export async function importEntriesAction(form: FormData) {
-  const pid = String(form.get("period") ?? "");
-  await adminAction({ path: `/admin/leaderboard?period=${encodeURIComponent(pid)}`, audit: "entries.import", revalidate: ["/leaderboard", "/"] }, async () => {
-    const v = parseForm(z.object({ period: zId, csv: zRequiredText(200_000), replace: checkbox }), form);
-    const rows = parseLines(v.csv, DECIMAL_20_8).map((r) => ({ username: r.name, wagered: r.value }));
-    return { period: v.period, rows: await upsertEntries(v.period, rows, v.replace), replace: v.replace };
-  });
-}
-
-export async function removeEntryAction(form: FormData) {
-  const pid = String(form.get("period") ?? "");
-  await adminAction({ path: `/admin/leaderboard?period=${encodeURIComponent(pid)}`, audit: "entries.remove", revalidate: ["/leaderboard", "/"] }, async () => {
-    const v = parseForm(z.object({ period: zId, username: zRequiredText(64) }), form);
-    await removeEntry(v.period, v.username);
-    return v;
-  });
 }
 
 // ── store ──────────────────────────────────────────────────────────────

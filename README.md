@@ -52,13 +52,13 @@ from the manually verified wagers used by milestones.
 
 Run `npm run migrate` to create `qboards_snapshots`. Set a strong `CRON_SECRET`
 in the hosting environment (including Netlify Functions scope). On Netlify,
-`netlify/functions/sync-leaderboard.mjs` calls the protected sync route every 15 minutes
+`netlify/functions/sync-leaderboard.mjs` calls the protected sync route every 8 hours
 at **00:00, 06:00, 12:00 and 18:00 UTC** on published deploys. After deploying, use **Functions →
 sync-leaderboard → Run now** for the first import. Other hosts can schedule a
 GET or POST to `/api/cron/leaderboard` with `Authorization: Bearer <CRON_SECRET>`.
 This repository prepares the scheduler; deploying and configuring the host is
 required to activate it. Fetch failures keep the last successful snapshot, and
-the public page shows its last sync time and flags delays over 45 minutes.
+the public page shows its last sync time and flags delays over 9 hours.
 The upstream endpoints are undocumented and may change.
 
 Before the first successful sync the public leaderboard shows an empty state. **Admin → Leaderboard** still manages verified wager periods and CSV

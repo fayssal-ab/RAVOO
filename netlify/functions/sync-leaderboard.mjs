@@ -1,5 +1,5 @@
-// Netlify runs this on published deploys every 15 minutes.
-export const config = { schedule: "*/15 * * * *" };
+// Netlify runs this on published deploys every 8 hours (00:00, 08:00, 16:00 UTC).
+export const config = { schedule: "0 */8 * * *" };
 
 export default async function syncLeaderboard() {
   const base = process.env.URL;

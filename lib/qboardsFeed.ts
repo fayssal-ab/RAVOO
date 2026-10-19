@@ -8,14 +8,33 @@ const amount = z.union([z.number().finite(), z.string().regex(/^\d+(\.\d+)?$/)])
   .transform((v) => new Decimal(v).toDecimalPlaces(8).toFixed())
   .refine((v) => new Decimal(v).gte(0) && new Decimal(v).lt("1000000000000"));
 const date = z.string().datetime();
+const eventItem = z.object({
+  _id: z.string().regex(/^[a-f0-9]{24}$/), startAt: date, endAt: date,
+  prizePool: amount,
+});
 const eventSchema = z.object({ data: z.object({
   title: z.string().min(1).max(120),
   usePoints: z.literal(true),
-  currentEvent: z.object({
-    _id: z.string().regex(/^[a-f0-9]{24}$/), startAt: date, endAt: date,
-    prizePool: amount,
-  }),
+  currentEvent: eventItem,
+  // every event (month) of the board; older ones may miss fields → skipped
+  allEvents: z.array(z.unknown()).optional(),
 }) });
+
+export interface QboardsEvent { id: string; startsAt: string; endsAt: string }
+
+/** The board's events: the current one and every other one Q-boards still lists. */
+export async function fetchQboardsEvents(fetcher: typeof fetch = fetch): Promise<{ current: QboardsEvent; all: QboardsEvent[] }> {
+  const response = await fetcher(`https://q-boards.com/api/qboard/event-data?${new URLSearchParams({ name: QBOARDS_NAME })}`, {
+    cache: "no-store", signal: AbortSignal.timeout(10000), headers: { Accept: "application/json" },
+  });
+  if (!response.ok) throw new Error(`Q-boards HTTP ${response.status}`);
+  const { data } = eventSchema.parse(await response.json());
+  const toEvent = (e: z.infer<typeof eventItem>): QboardsEvent => ({ id: e._id, startsAt: e.startAt, endsAt: e.endAt });
+  const all = (data.allEvents ?? []).flatMap((e) => { const r = eventItem.safeParse(e); return r.success ? [toEvent(r.data)] : []; });
+  const current = toEvent(data.currentEvent);
+  if (!all.some((e) => e.id === current.id)) all.push(current);
+  return { current, all };
+}
 const tableSchema = z.object({ data: z.object({
   total: z.number().int().min(0).max(10000),
   pageSize: z.number().int().positive().max(1000).optional(),
@@ -32,7 +51,8 @@ export interface QboardsSnapshot {
   rows: { rank: number; username: string; score: string; prize: string | null }[];
 }
 
-export async function fetchQboardsSnapshot(fetcher: typeof fetch = fetch): Promise<QboardsSnapshot> {
+/** Full ranking of one event (default: the current one). */
+export async function fetchQboardsSnapshot(fetcher: typeof fetch = fetch, eventId?: string): Promise<QboardsSnapshot> {
   // Bound the entire run, including all pages, to fit the scheduled job.
   const signal = AbortSignal.timeout(20000);
   async function read(path: string, params: Record<string, string>) {
@@ -43,7 +63,11 @@ export async function fetchQboardsSnapshot(fetcher: typeof fetch = fetch): Promi
     return response.json();
   }
   const { data: event } = eventSchema.parse(await read("event-data", { name: QBOARDS_NAME }));
-  const current = event.currentEvent;
+  const listed = eventId && eventId !== event.currentEvent._id
+    ? (event.allEvents ?? []).map((e) => eventItem.safeParse(e)).find((r) => r.success && r.data._id === eventId)
+    : null;
+  if (eventId && eventId !== event.currentEvent._id && !listed?.success) throw new Error("Q-boards event not listed");
+  const current = listed?.success ? listed.data : event.currentEvent;
   if (current.endAt <= current.startAt) throw new Error("Q-boards invalid event dates");
   const params = { name: QBOARDS_NAME, id: current._id };
   const { data: first } = tableSchema.parse(await read("table-data", { ...params, page: "1" }));

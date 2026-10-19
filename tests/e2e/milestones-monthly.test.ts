@@ -1,37 +1,60 @@
-// E2E for monthly milestones against a throwaway database:
+// E2E for monthly milestones on Q-boards points against a throwaway database:
 //   DB_NAME=ravo_test node --env-file-if-exists=.env.local --conditions=react-server --import tsx --test tests/e2e/milestones-monthly.test.ts
 import assert from "node:assert/strict";
 import { after, test } from "node:test";
 import type { ResultSetHeader } from "mysql2/promise";
-import { claimMilestone, claimsFor, monthKey, monthlyWager } from "../../lib/milestones";
+import { claimMilestone, claimsFor, monthlyProgress } from "../../lib/milestones";
 import { getPool } from "../../lib/db";
 
 if (process.env.DB_NAME !== "ravo_test") throw new Error("refusing to run outside ravo_test");
 after(() => getPool().end());
 
-test("wager counts this month only; one claim per milestone per month", async () => {
-  const pool = getPool();
-  const tag = `m${Date.now()}`;
-  const [acc] = await pool.query<ResultSetHeader>("INSERT INTO user_accounts (display_name, qzino_username) VALUES (?, ?)", [tag, tag]);
-  const accountId = acc.insertId;
-  const [ms] = await pool.query<ResultSetHeader>("INSERT INTO milestones (name, min_wager, reward) VALUES (?, ?, 10)", [tag, 1000 + (Date.now() % 100000)]);
-  const milestoneId = ms.insertId;
-  const now = new Date();
-  const thisMonth = `${monthKey(now)}-02 00:00:00`;
-  const lastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 2)).toISOString().slice(0, 19).replace("T", " ");
-  const [p1] = await pool.query<ResultSetHeader>("INSERT INTO lb_periods (title, starts_at, ends_at) VALUES ('t', ?, ?)", [thisMonth, thisMonth]);
-  const [p0] = await pool.query<ResultSetHeader>("INSERT INTO lb_periods (title, starts_at, ends_at) VALUES ('t', ?, ?)", [lastMonth, lastMonth]);
-  await pool.query("INSERT INTO lb_entries (period_id, username, wagered) VALUES (?, ?, 999999), (?, ?, 500)", [p0.insertId, tag, p1.insertId, tag]);
+const day = 86_400_000;
+const snapshot = (id: string, start: number, end: number, rows: [string, string][]) => ({
+  eventId: id, title: "Never Sleeps", startsAt: new Date(start).toISOString(), endsAt: new Date(end).toISOString(),
+  prizePool: "200", usePoints: true, rows: rows.map(([username, score], i) => ({ rank: i + 1, username, score, prize: null })),
+});
 
-  assert.equal(Number(await monthlyWager(tag)), 500); // last month's 999,999 doesn't count
+test("progress = points in the running event; one claim per milestone per event month", async () => {
+  const pool = getPool();
+  const now = Date.now();
+  const tag = `m${now}`;
+  await pool.query("DELETE FROM qboards_snapshots");
+  const [acc] = await pool.query<ResultSetHeader>("INSERT INTO user_accounts (display_name, qzino_username) VALUES (?, ?)", [tag, tag.toUpperCase()]);
+  const accountId = acc.insertId;
+  const [ms] = await pool.query<ResultSetHeader>("INSERT INTO milestones (name, min_wager, reward) VALUES (?, ?, 10)", [tag, 1000 + (now % 100000)]);
+  const milestoneId = ms.insertId;
+  const put = (s: ReturnType<typeof snapshot>) =>
+    pool.query("REPLACE INTO qboards_snapshots (event_id, snapshot, synced_at) VALUES (?, ?, UTC_TIMESTAMP())", [s.eventId, JSON.stringify(s)]);
+
+  // no event running → no progress, no claim
+  assert.equal(await monthlyProgress(tag), null);
+  await assert.rejects(claimMilestone(accountId, milestoneId), /no_live_board/);
+
+  // last month's points don't count, this month's do (username match is case-insensitive)
+  await put(snapshot("a".repeat(24), now - 80 * day, now - 50 * day, [[tag, "999999"]]));
+  // started more than a month ago → its month differs from the next event's
+  const live = snapshot("b".repeat(24), now - 35 * day, now + 20 * day, [["someone", "5000"], [tag, "500"]]);
+  await put(live);
+  const progress = (await monthlyProgress(tag))!;
+  assert.equal(progress.points, "500");
+  assert.equal(progress.month, live.startsAt.slice(0, 7));
   await assert.rejects(claimMilestone(accountId, milestoneId), /not_reached/);
-  await pool.query("UPDATE lb_entries SET wagered = 200000 WHERE period_id = ? AND username = ?", [p1.insertId, tag]);
+
+  live.rows[1].score = "200000";
+  await put(live);
   await claimMilestone(accountId, milestoneId);
   await assert.rejects(claimMilestone(accountId, milestoneId), /already_claimed/);
-  assert.equal((await claimsFor(accountId)).get(milestoneId), "pending");
-  // a claim from last month doesn't block this month
-  await pool.query("UPDATE milestone_claims SET claim_month = ? WHERE account_id = ?", [lastMonth.slice(0, 7), accountId]);
-  assert.equal((await claimsFor(accountId)).size, 0);
+  assert.equal((await claimsFor(accountId, progress.month)).get(milestoneId), "pending");
+
+  // the next month's event starts → the milestone can be claimed again
+  await put(snapshot("b".repeat(24), now - 35 * day, now - 1000, [[tag, "200000"]]));
+  await put(snapshot("c".repeat(24), now - 500, now + 30 * day, [[tag, "300000"]]));
+  const p2 = (await monthlyProgress(tag))!;
+  assert.notEqual(p2.month, progress.month);
+  assert.equal(p2.points, "300000");
+  assert.equal((await claimsFor(accountId, p2.month)).size, 0);
   await claimMilestone(accountId, milestoneId);
-  assert.equal((await claimsFor(accountId)).get(milestoneId), "pending");
+  assert.equal((await claimsFor(accountId, p2.month)).get(milestoneId), "pending");
+  await pool.query("DELETE FROM qboards_snapshots");
 });

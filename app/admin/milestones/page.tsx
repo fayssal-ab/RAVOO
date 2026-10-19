@@ -12,7 +12,7 @@ export default async function AdminMilestones({ searchParams }: { searchParams: 
   return (
     <>
       <AdminTitle title="Milestones">
-        Milestones are monthly: a viewer&apos;s wager is the sum of their wagers on the leaderboard periods that start that month (UTC, matched by Qzino username), and each milestone can be claimed once per month. Check the wager before paying.
+        Milestones are monthly and use Q-boards points: a viewer&apos;s progress is their points in the leaderboard event running now (matched by Qzino username, synced 3 times a day). Each milestone can be claimed once per event month. Thresholds below are in points. Check the points on q-boards.com before paying.
       </AdminTitle>
       <Flash ok={sp.ok} error={sp.error} detail={sp.detail} />
 
@@ -25,7 +25,7 @@ export default async function AdminMilestones({ searchParams }: { searchParams: 
               <li key={c.id} className="grid gap-3 py-4 lg:grid-cols-[1fr_auto] lg:items-center">
                 <div className="text-sm">
                   <p><span className="font-bold">{c.milestone_name}</span> · <span className="font-mono text-neon">{formatMoney(c.reward)}</span>{c.claim_month && <span className="text-dim"> · {c.claim_month}</span>}</p>
-                  <p className="text-muted">{c.display_name} · Qzino <span className="font-mono text-text">{c.qzino_username}</span> · wagered {formatMoney(c.wagered)} · {c.created_at}</p>
+                  <p className="text-muted">{c.display_name} · Qzino <span className="font-mono text-text">{c.qzino_username}</span> · {Number(c.wagered).toLocaleString("en-US", { maximumFractionDigits: 2 })} pts · {c.created_at}</p>
                 </div>
                 <form action={resolveClaimAction} className="flex flex-wrap gap-2">
                   <input type="hidden" name="id" value={c.id} />
@@ -41,13 +41,13 @@ export default async function AdminMilestones({ searchParams }: { searchParams: 
 
       <Card title="Tiers" className="mt-6">
         <form action={saveMilestonesAction}>
-          <div className="mb-2 grid grid-cols-[1fr_9rem_9rem] gap-3 text-xs uppercase tracking-widest text-dim"><span>Name</span><span>Wager ($)</span><span>Reward ($)</span></div>
+          <div className="mb-2 grid grid-cols-[1fr_9rem_9rem] gap-3 text-xs uppercase tracking-widest text-dim"><span>Name</span><span>Points</span><span>Reward ($)</span></div>
           <div className="space-y-2">
             {rows.map((m, i) => (
               <div key={i} className="grid grid-cols-[1fr_9rem_9rem] gap-3">
                 <input type="hidden" name={`id_${i}`} value={m.id} />
                 <input name={`name_${i}`} defaultValue={m.name} maxLength={64} placeholder={m.id ? "" : "new tier"} className="field !py-1.5 text-sm" aria-label="Name" />
-                <input name={`wager_${i}`} defaultValue={m.min_wager ? Number(m.min_wager).toString() : ""} className="field !py-1.5 font-mono text-sm" aria-label="Wager" />
+                <input name={`wager_${i}`} defaultValue={m.min_wager ? Number(m.min_wager).toString() : ""} className="field !py-1.5 font-mono text-sm" aria-label="Points" />
                 <input name={`reward_${i}`} defaultValue={m.reward ? Number(m.reward).toString() : ""} className="field !py-1.5 font-mono text-sm" aria-label="Reward" />
               </div>
             ))}

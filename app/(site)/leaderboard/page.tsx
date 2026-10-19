@@ -25,15 +25,17 @@ const RULES = [
   "Prizes are paid after the period ends. Contact the team on Discord if something looks wrong.",
 ];
 
-export default async function LeaderboardPage({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
-  const { p } = await searchParams;
-  const id = p && /^\d+$/.test(p) ? Number(p) : undefined;
+export default async function LeaderboardPage({ searchParams }: { searchParams: Promise<{ p?: string; e?: string }> }) {
+  const { p, e } = await searchParams;
+  // e = a Q-boards event (archived month); p = a legacy manual period
+  const id = e && /^[a-f0-9]{24}$/.test(e) ? e : p && /^\d+$/.test(p) ? Number(p) : undefined;
+  const archived = id != null;
   const board = await getBoard(id).catch(() => null);
   const period = board?.period ?? null;
   const rules = board?.source === "qboards" ? [
     "Rankings and prizes come from the official Q-boards leaderboard.",
     "Your rank follows the points awarded by Q-boards during the event.",
-    "Scores and prizes sync every 15 minutes. Check the official board for the latest results and payout rules.",
+    "Scores and prizes sync every 8 hours (3 times a day). Check the official board for the latest results and payout rules.",
     "Usernames are partly hidden for privacy.",
   ] : RULES;
   const rows = (board?.rows ?? []).map((r) => ({ ...r, score: Number(r.wagered), prize: r.prize != null ? Number(r.prize) : null }));
@@ -59,6 +61,14 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
         <>
           {/* prize headline */}
           <header className="pb-10 pt-4 text-center">
+            {archived && (
+              <Link href="/leaderboard" className="mb-4 inline-flex items-center gap-1 py-2 text-sm text-muted hover:text-neon">← Current leaderboard</Link>
+            )}
+            {!archived && period.state === "ended" && (
+              <p className="mx-auto mb-5 max-w-md rounded-xl border border-line-hot bg-surface px-4 py-3 text-sm text-muted">
+                This month&apos;s leaderboard has ended. The new one shows up here automatically as soon as it starts.
+              </p>
+            )}
             <p className="eyebrow mb-2">Qzino {board.scoreKind === "points" ? "points" : "wager"} leaderboard · prize pool</p>
             <p className="font-mono text-6xl font-bold text-gold drop-shadow-[0_0_30px_rgb(255_215_106/0.35)] sm:text-8xl">
               {formatMoney(period.prize_pool)}
@@ -69,7 +79,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
             </p>
             {board.source === "qboards" && board.syncedAt && (
               <p className="mt-3 text-xs text-muted">
-                Updated every 15 minutes · Last sync {new Date(board.syncedAt.replace(" ", "T") + "Z").toLocaleString("en-GB", { timeZone: "UTC" })} UTC
+                {archived ? "Final results · last sync" : "Updated every 8 hours · Last sync"} {new Date(board.syncedAt.replace(" ", "T") + "Z").toLocaleString("en-GB", { timeZone: "UTC" })} UTC
                 {board.syncDelayed && " · Update delayed"}
                 {" · "}<a href={QBOARDS_URL} target="_blank" rel="noopener noreferrer" className="inline-block py-2 underline">Official board</a>
               </p>
@@ -116,7 +126,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                 <p className="text-[0.7rem] uppercase tracking-[0.18em] text-dim">Ended {fmtDate(x.ends_at)}</p>
                 <p className="mt-3 text-[0.65rem] uppercase tracking-[0.2em] text-dim">Total prize pool</p>
                 <p className="font-mono text-2xl font-bold text-gold">{formatMoney(x.prize_pool)}</p>
-                <Link href={`/leaderboard?p=${x.id}`} className="btn btn-ghost btn-sm mt-4">View results</Link>
+                <Link href={x.link ?? `/leaderboard?p=${x.id}`} className="btn btn-ghost btn-sm mt-4">View results</Link>
               </div>
             ))}
           </Stagger>

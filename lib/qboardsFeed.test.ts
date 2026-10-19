@@ -52,3 +52,19 @@ test("fails on upstream errors or invalid responses instead of publishing empty 
   await assert.rejects(fetchQboardsSnapshot(async () => new Response("unavailable", { status: 503 })), /HTTP 503/);
   await assert.rejects(fetchQboardsSnapshot(async () => Response.json({ data: {} })));
 });
+
+test("lists every event and fetches an archived one by id", async () => {
+  const past = { _id: "5aaa338761d24a7bcd8cab95", startAt: "2026-09-01T00:00:00.000Z", endAt: "2026-10-01T00:00:00.000Z", prizePool: 150 };
+  const source = { data: { ...event.data, allEvents: [past, { broken: true }] } };
+  const { fetcher, urls } = mock([{ data: { total: 1, list: [player(1)] } }], source);
+  const { fetchQboardsEvents } = await import("./qboardsFeed");
+  const { current, all } = await fetchQboardsEvents(fetcher);
+  assert.equal(current.id, event.data.currentEvent._id);
+  assert.deepEqual(all.map((e) => e.id).sort(), [past._id, event.data.currentEvent._id].sort()); // malformed entry skipped
+  const snap = await fetchQboardsSnapshot(fetcher, past._id);
+  assert.equal(snap.eventId, past._id);
+  assert.equal(snap.prizePool, "150");
+  assert.equal(snap.endsAt, past.endAt);
+  assert.ok(urls.filter((u) => u.pathname.endsWith("table-data")).every((u) => u.searchParams.get("id") === past._id));
+  await assert.rejects(fetchQboardsSnapshot(fetcher, "0".repeat(24)), /not listed/);
+});
