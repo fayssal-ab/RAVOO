@@ -348,3 +348,9 @@ iframe[src*=".netlify/scripts/hud"],
   visibility: hidden !important;
   pointer-events: none !important;
 }
+
+@keyframes bell {
+  0%, 60%, 100% { transform: rotate(0); }
+  10%, 30% { transform: rotate(14deg); }
+  20%, 40% { transform: rotate(-12deg); }
+}

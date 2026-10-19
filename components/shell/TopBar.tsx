@@ -5,9 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronDown, Coins, Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { NAV, NAV_FLAT } from "@/lib/constants";
-import { RankBadge } from "@/components/ui/RankBadge";
+import { NavActions } from "./NavActions";
 
 export interface TopBarViewer { name: string; avatar: string; points: number; level: number }
 
@@ -122,22 +122,7 @@ export function TopBar({ viewer, live }: { viewer: TopBarViewer | null; live: bo
         </nav>
 
         <div className="ml-auto flex items-center gap-2 lg:ml-3">
-          {viewer ? (
-            <Link href="/account" className="flex items-center gap-2 rounded-full border border-line-hot bg-bg/60 py-1 pl-1 pr-3 transition hover:border-neon">
-              {viewer.avatar ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={viewer.avatar} alt="" className="size-8 rounded-full object-cover" />
-              ) : (
-                <span className="grid size-8 place-items-center rounded-full bg-surface-3 font-head text-sm font-bold text-neon">{viewer.name.slice(0, 1).toUpperCase()}</span>
-              )}
-              <span className="hidden sm:inline"><RankBadge level={viewer.level} compact /></span>
-              <span className="flex items-center gap-1 font-mono text-sm text-neon">
-                <Coins className="size-4" /> {viewer.points.toLocaleString("en-US")}
-              </span>
-            </Link>
-          ) : (
-            <Link href="/account" className="btn btn-neon btn-sm">Log in</Link>
-          )}
+          <NavActions viewer={viewer} />
           <button
             type="button"
             className="grid size-10 place-items-center rounded-xl border border-line-hot text-text lg:hidden"

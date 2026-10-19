@@ -3,6 +3,7 @@ import { QzinoLogo } from "@/components/ui/QzinoLogo";
 import Link from "next/link";
 import { ArrowRight, Coins, Gift, Timer } from "lucide-react";
 import { Hero } from "@/components/home/Hero";
+import { PromoSteps } from "@/components/promo/PromoSteps";
 import { StreamBox } from "@/components/stream/StreamBox";
 import { Ticker } from "@/components/home/Ticker";
 import { Paw } from "@/components/decor/shapes";
@@ -77,6 +78,14 @@ export default async function HomePage() {
               </div>
             </div>
           </SpotlightCard>
+        </Reveal>
+      </section>
+
+      {/* how to claim the code */}
+      <section className="mx-auto mt-10 max-w-6xl px-4 sm:px-6">
+        <Reveal>
+          <p className="eyebrow mb-6 text-center">How to claim {QZINO_CODE}</p>
+          <PromoSteps />
         </Reveal>
       </section>
 
