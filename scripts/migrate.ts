@@ -55,7 +55,18 @@ async function main() {
 
   const ssl = sslOption();
   // Server-level connection first, so we can create the DB if it's missing.
-  const root = await mysql.createConnection({ host, port, user, password, multipleStatements: true, ssl });
+  // Aiven's free tier caps connections; when the site holds them all, wait
+  // for idle ones to expire instead of failing straight away.
+  let root: mysql.Connection | null = null;
+  for (let attempt = 1; !root; attempt++) {
+    try {
+      root = await mysql.createConnection({ host, port, user, password, multipleStatements: true, ssl });
+    } catch (err) {
+      if ((err as { code?: string }).code !== "ER_CON_COUNT_ERROR" || attempt >= 10) throw err;
+      console.warn(`database is at its connection limit, retrying in 30 s (${attempt}/10)…`);
+      await new Promise((r) => setTimeout(r, 30_000));
+    }
+  }
 
   if (fresh) {
     console.warn(`--fresh: dropping database \`${database}\``);

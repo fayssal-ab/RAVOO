@@ -10,6 +10,10 @@ import mysql, { type Pool } from "mysql2/promise";
 // metadata, before runtime env vars are available.
 let pool: Pool | null = null;
 
+/** Server-side idle limit for our sessions (seconds). */
+const IDLE_SERVER_SEC = 90;
+const LOST = new Set(["PROTOCOL_CONNECTION_LOST", "ECONNRESET", "EPIPE", "ER_CON_COUNT_ERROR"]);
+
 export function getPool(): Pool {
   if (pool) return pool;
 
@@ -31,9 +35,9 @@ export function getPool(): Pool {
     // Low pool: on serverless (Netlify) every warm function instance keeps its
     // own pool, and managed hosts like Aiven's free tier cap total connections
     // (~20). A small limit + short idle timeout avoids "Too many connections".
-    connectionLimit: Number(process.env.DB_POOL_LIMIT ?? 3),
-    maxIdle: 2,
-    idleTimeout: 20000,
+    connectionLimit: Number(process.env.DB_POOL_LIMIT ?? 2),
+    maxIdle: 1,
+    idleTimeout: 15000,
     enableKeepAlive: true,
     // fail fast when the database is unreachable so pages show their error
     // state instead of a loading screen that never ends
@@ -57,10 +61,26 @@ export function getPool(): Pool {
   });
   // TIMESTAMP columns are compared against UTC_TIMESTAMP() and admin inputs are
   // UTC, so pin every session to UTC regardless of the server default.
+  // A frozen serverless instance can't run the pool's idle timer, so its open
+  // connections would sit on the server for the default 8 h wait_timeout and
+  // exhaust the connection cap; a short session wait_timeout makes MySQL close
+  // them itself.
   // (`pool.pool` is the callback pool underneath; absent in test doubles.)
   (pool as Partial<Pool>).pool?.on("connection", (conn) => {
-    conn.query("SET time_zone = '+00:00'");
+    conn.query(`SET time_zone = '+00:00', SESSION wait_timeout = ${IDLE_SERVER_SEC}, SESSION interactive_timeout = ${IDLE_SERVER_SEC}`);
   });
+
+  // A connection the server closed while the instance was frozen fails on
+  // first use: retry the query once on a fresh connection.
+  const query = pool.query.bind(pool);
+  pool.query = (async (...args: Parameters<Pool["query"]>) => {
+    try {
+      return await query(...args);
+    } catch (err) {
+      if (!LOST.has((err as { code?: string }).code ?? "")) throw err;
+      return query(...args);
+    }
+  }) as Pool["query"];
 
   return pool;
 }
