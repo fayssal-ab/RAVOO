@@ -1,5 +1,6 @@
 import { FloatingDecor } from "@/components/decor/FloatingDecor";
 import { Backdrop } from "@/components/shell/Backdrop";
+import { CookieBanner } from "@/components/shell/CookieBanner";
 import { Footer } from "@/components/shell/Footer";
 import { TopBar } from "@/components/shell/TopBar";
 import { getViewer } from "@/lib/account";
@@ -19,6 +20,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <main className="pt-[calc(var(--nav-h)+1.5rem)]">{children}</main>
         <Footer />
       </div>
+      <CookieBanner />
     </>
   );
 }

@@ -71,7 +71,7 @@ export function Footer() {
           </div>
 
           <div className="mt-10 flex flex-col gap-3 border-t border-neon/15 pt-6 text-xs text-text/55 sm:flex-row sm:items-center sm:justify-between">
-            <p>© {new Date().getFullYear()} RAVONEVERSLEEPS. Not a casino, no deposits taken.</p>
+            <p>© {new Date().getFullYear()} RAVONEVERSLEEPS. Not a casino, no deposits taken. <Link href="/privacy" className="underline hover:text-neon">Privacy</Link></p>
             <p className="flex items-center gap-2">
               <span className="rounded border border-danger/60 px-1.5 py-0.5 font-bold text-danger">18+</span>
               Play responsibly. If it stops being fun, stop gambling.
