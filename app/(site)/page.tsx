@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { QzinoLogo } from "@/components/ui/QzinoLogo";
 import Link from "next/link";
 import { ArrowRight, Coins, Gift, Timer } from "lucide-react";
 import { Hero } from "@/components/home/Hero";
@@ -50,9 +51,9 @@ export default async function HomePage() {
             <Paw className="pointer-events-none absolute -bottom-10 -left-8 size-44 -rotate-12 text-neon/[0.06]" />
             <div className="relative grid items-center gap-8 lg:grid-cols-[1.4fr_1fr]">
               <div>
-                <p className="font-head text-3xl font-bold tracking-tight">
-                  <span className="text-neon">Q</span>zino
-                </p>
+                <a href={QZINO_URL} target="_blank" rel="noopener noreferrer sponsored" className="inline-block transition hover:scale-105" aria-label="Qzino">
+                  <QzinoLogo className="h-10 w-auto drop-shadow-[0_0_18px_rgb(141_255_74/0.35)] sm:h-12" />
+                </a>
                 <h2 className="mt-3 font-head text-2xl font-bold leading-snug sm:text-3xl">
                   Play under code <span className="neon-text font-mono">{QZINO_CODE}</span> for exclusive leaderboards, milestones,
                   raffles and a <span className="text-neon">$50 welcome bonus</span>.

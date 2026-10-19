@@ -7,6 +7,7 @@ import { useRef } from "react";
 import { ArrowRight, Trophy } from "lucide-react";
 import { Chip, Club, DripEdge, Spade } from "@/components/decor/shapes";
 import { CopyCode } from "@/components/ui/CopyCode";
+import { QzinoLogo } from "@/components/ui/QzinoLogo";
 
 const TITLE = "NEVERSLEEPS".split("");
 
@@ -111,6 +112,19 @@ export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string;
           </a>
           <CopyCode code={code} size="lg" />
         </motion.div>
+
+        <motion.a
+          href={qzinoUrl}
+          target="_blank"
+          rel="noopener noreferrer sponsored"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.35 }}
+          className="mt-6 inline-flex items-center gap-3 rounded-full border border-line-hot bg-black/40 px-4 py-2 backdrop-blur transition hover:border-neon"
+        >
+          <span className="font-pixel text-[0.65rem] uppercase tracking-[0.2em] text-muted">Official partner</span>
+          <QzinoLogo className="h-6 w-auto" />
+        </motion.a>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.45 }} className="mt-6">
           <Link href="/leaderboard" className="inline-flex items-center gap-2 font-head text-sm font-semibold uppercase tracking-[0.2em] text-text/70 transition hover:text-neon">

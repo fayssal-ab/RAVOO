@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { QzinoLogo } from "@/components/ui/QzinoLogo";
 import Image from "next/image";
 import Link from "next/link";
 import { Check, Clock, Lock, ShieldAlert } from "lucide-react";
@@ -123,7 +124,7 @@ export default async function MilestonesPage({ searchParams }: { searchParams: P
         <h2 className="text-center font-display text-5xl"><span className="chrome">How to</span> <span className="neon-text">participate</span></h2>
         <Stagger className="mt-10 grid gap-5 md:grid-cols-3">
           {[
-            { t: `Join under code ${QZINO_CODE}`, b: "Sign up on Qzino with the code so your wagers count toward the milestones.", a: <a href={QZINO_URL} target="_blank" rel="noopener noreferrer sponsored" className="btn btn-neon btn-sm">Play on Qzino</a> },
+            { t: `Join under code ${QZINO_CODE}`, b: "Sign up on Qzino with the code so your wagers count toward the milestones.", a: <a href={QZINO_URL} target="_blank" rel="noopener noreferrer sponsored" className="btn btn-neon btn-sm">Play on <QzinoLogo className="h-4 w-auto brightness-0" /></a> },
             { t: "Connect your account", b: "Log in here and add your Qzino username on your account page so we can match your wagers.", a: <Link href="/account" className="btn btn-ghost btn-sm">Open account</Link> },
             { t: "Play and come back", b: "Wagers update with the leaderboard. Come back when you hit a milestone and claim it.", a: null },
           ].map((s, i) => (

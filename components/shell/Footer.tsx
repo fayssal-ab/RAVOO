@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { QzinoLogo } from "@/components/ui/QzinoLogo";
 import Link from "next/link";
 import { GooWave, Paw } from "@/components/decor/shapes";
 import { DISCORD_URL, KICK_URL, NAV_FLAT, QZINO_CODE, QZINO_URL, X_URL } from "@/lib/constants";
@@ -40,7 +41,7 @@ export function Footer() {
           {/* code strip */}
           <div className="mb-12 flex flex-col items-center justify-between gap-5 rounded-3xl border border-neon/30 bg-black/30 p-6 backdrop-blur sm:flex-row">
             <div>
-              <p className="eyebrow">Qzino exclusive</p>
+              <p className="flex items-center gap-2"><QzinoLogo className="h-6 w-auto" /><span className="eyebrow">exclusive</span></p>
               <p className="mt-1 font-head text-xl font-bold">
                 Use code <span className="font-mono text-neon">{QZINO_CODE}</span> for a $50 bonus, up to 40% cashback & 15% rakeback.
               </p>
