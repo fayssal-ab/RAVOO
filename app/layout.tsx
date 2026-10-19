@@ -14,8 +14,14 @@ export const metadata: Metadata = {
   title: { default: `${SITE_NAME} · Leaderboard, Store & Raffles`, template: `%s · ${SITE_NAME}` },
   description: SITE_TAGLINE,
   icons: { icon: "/icon.png" },
-  openGraph: { title: SITE_NAME, description: SITE_TAGLINE, images: ["/og.jpg"] },
-  twitter: { card: "summary_large_image", images: ["/og.jpg"] },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} · Code RAVO50 for a $50 bonus`,
+    description: SITE_TAGLINE,
+    images: [{ url: "/og-v2.jpg", width: 1200, height: 630, alt: "RAVONEVERSLEEPS: code RAVO50, $50 bonus on Qzino" }],
+  },
+  twitter: { card: "summary_large_image", images: ["/og-v2.jpg"] },
 };
 
 export const viewport: Viewport = { themeColor: "#040605" };
