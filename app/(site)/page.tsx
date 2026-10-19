@@ -76,7 +76,29 @@ export default async function HomePage() {
               </div>
               <div className="relative mx-auto w-full max-w-xs">
                 <div className="absolute inset-6 rounded-3xl bg-neon/25 blur-3xl" />
-                <Image src="/media/qzino-bonus.webp" alt={`Qzino: claim a $50 bonus with code ${QZINO_CODE}`} width={720} height={900} className="relative -rotate-3 rounded-3xl border border-line-hot shadow-2xl transition duration-500 hover:rotate-0 hover:scale-[1.03]" />
+                {/* bonus card: only the confirmed offer ($50 with the code) */}
+                <a
+                  href={QZINO_URL}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                  aria-label={`Claim a $50 bonus on Qzino with code ${QZINO_CODE}`}
+                  className="relative block aspect-[4/5] -rotate-3 overflow-hidden rounded-3xl border border-line-hot shadow-2xl transition duration-500 hover:rotate-0 hover:scale-[1.03]"
+                >
+                  <Image src="/media/hero/bg.webp" alt="" fill sizes="320px" className="object-cover object-[30%_50%] opacity-60" />
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_45%,rgb(4_10_5/0.2),rgb(4_10_5/0.85)_75%)]" />
+                  <div className="relative flex size-full flex-col items-center justify-between p-6 text-center">
+                    <QzinoLogo className="h-7 w-auto" />
+                    <div>
+                      <p className="font-pixel text-xs uppercase tracking-[0.3em] text-neon">Welcome bonus</p>
+                      <p className="chrome mt-1 font-display text-8xl leading-none drop-shadow-[0_8px_24px_rgb(0_0_0/0.8)]">$50</p>
+                    </div>
+                    <div>
+                      <p className="text-[0.65rem] uppercase tracking-[0.25em] text-muted">Promo code</p>
+                      <p className="mt-1 rounded-xl border border-neon/50 bg-bg/70 px-4 py-2 font-mono text-2xl font-bold tracking-[0.2em] text-neon">{QZINO_CODE}</p>
+                      <p className="mt-3 text-[0.65rem] text-dim">18+ · terms apply on Qzino</p>
+                    </div>
+                  </div>
+                </a>
               </div>
             </div>
           </SpotlightCard>
