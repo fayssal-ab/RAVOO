@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { announceReady } from "./siteReady";
 
 // First-load screen (on every full page load): the spinning pug inside a
 // neon ring and a progress bar that follows the real loading. It stays until
@@ -55,6 +56,7 @@ export function Preloader() {
       const wait = Math.max(0, (reduced ? 300 : MIN_MS) - (Date.now() - start));
       timers.push(setTimeout(() => {
         setOut(true);
+        announceReady();
         document.documentElement.style.overflow = "";
         timers.push(setTimeout(() => setGone(true), 650));
       }, wait));

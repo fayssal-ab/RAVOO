@@ -7,6 +7,8 @@ import { useRef } from "react";
 import { ArrowRight, Trophy } from "lucide-react";
 import { Chip, Club, DripEdge, Spade } from "@/components/decor/shapes";
 import { CopyCode } from "@/components/ui/CopyCode";
+import { useSiteReady } from "@/components/shell/siteReady";
+import { SlotReels } from "./SlotReels";
 import { QzinoLogo } from "@/components/ui/QzinoLogo";
 
 const TITLE = "NEVERSLEEPS".split("");
@@ -17,6 +19,7 @@ const TITLE = "NEVERSLEEPS".split("");
 export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string; pool: string | null }) {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
+  const ready = useSiteReady();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const bgY = useTransform(scrollYProgress, [0, 1], ["0%", reduce ? "0%" : "25%"]);
   const pugY = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : -120]);
@@ -69,31 +72,25 @@ export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string;
           <motion.div
             className="relative size-full"
             initial={{ opacity: 0, y: 60, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            animate={ready ? { opacity: 1, y: 0, scale: 1 } : undefined}
             transition={{ type: "spring", stiffness: 120, damping: 12, delay: 0.1 }}
           >
             <Image src="/media/pug-mascot.webp" alt="Ravo the pug" fill priority sizes="288px" className="animate-dance object-contain drop-shadow-[0_20px_40px_rgb(0_0_0/0.6)]" />
           </motion.div>
         </motion.div>
 
-        <h1 className="mt-2 font-display leading-[0.82]">
-          <motion.span
-            className="chrome block text-[clamp(3.6rem,13vw,9.5rem)]"
-            initial={{ opacity: 0, scale: 1.25, filter: "blur(12px)" }}
-            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.25 }}
-          >
-            RAVO
-          </motion.span>
-          <span className="block text-[clamp(1.9rem,7vw,5rem)]" aria-label="never sleeps">
+        <h1 className="mt-4 font-display leading-[0.82]">
+          <span className="sr-only">RAVO</span>
+          <SlotReels start={ready} />
+          <span className="mt-3 block text-[clamp(1.9rem,7vw,5rem)]" aria-label="never sleeps">
             {TITLE.map((ch, i) => (
               <motion.span
                 key={i}
                 aria-hidden
                 className="neon-text inline-block"
                 initial={{ opacity: 0, y: -50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.55 + i * 0.04, type: "spring", stiffness: 300, damping: 14 }}
+                animate={ready ? { opacity: 1, y: 0 } : undefined}
+                transition={{ delay: 2.1 + i * 0.04, type: "spring", stiffness: 300, damping: 14 }}
               >
                 {ch}
               </motion.span>
@@ -101,12 +98,12 @@ export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string;
           </span>
         </h1>
 
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} className="mx-auto mt-6 max-w-xl text-base text-text/80 sm:text-lg">
+        <motion.p initial={{ opacity: 0 }} animate={ready ? { opacity: 1 } : undefined} transition={{ delay: 2.4 }} className="mx-auto mt-6 max-w-xl text-base text-text/80 sm:text-lg">
           Play on Qzino with code <span className="font-mono font-bold text-neon">{code}</span> for a <b>$50 bonus</b>, monthly wager leaderboards,
           milestones and a points store that pays you back.
         </motion.p>
 
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.25 }} className="mt-8 flex flex-col items-center gap-4 sm:flex-row">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={ready ? { opacity: 1, y: 0 } : undefined} transition={{ delay: 2.55 }} className="mt-8 flex flex-col items-center gap-4 sm:flex-row">
           <a href={qzinoUrl} target="_blank" rel="noopener noreferrer sponsored" className="btn btn-neon px-7 py-4 text-base">
             Play on Qzino <ArrowRight className="size-5" />
           </a>
@@ -118,15 +115,15 @@ export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string;
           target="_blank"
           rel="noopener noreferrer sponsored"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.35 }}
+          animate={ready ? { opacity: 1 } : undefined}
+          transition={{ delay: 2.7 }}
           className="mt-6 inline-flex items-center gap-3 rounded-full border border-line-hot bg-black/40 px-4 py-2 backdrop-blur transition hover:border-neon"
         >
           <span className="font-pixel text-[0.65rem] uppercase tracking-[0.2em] text-muted">Official partner</span>
           <QzinoLogo className="h-6 w-auto" />
         </motion.a>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.45 }} className="mt-6">
+        <motion.div initial={{ opacity: 0 }} animate={ready ? { opacity: 1 } : undefined} transition={{ delay: 2.8 }} className="mt-6">
           <Link href="/leaderboard" className="inline-flex items-center gap-2 font-head text-sm font-semibold uppercase tracking-[0.2em] text-text/70 transition hover:text-neon">
             <Trophy className="size-4 text-gold" />
             {pool ? <>{pool} monthly leaderboard · view</> : <>View the leaderboard</>}
