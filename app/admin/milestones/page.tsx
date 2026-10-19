@@ -12,7 +12,7 @@ export default async function AdminMilestones({ searchParams }: { searchParams: 
   return (
     <>
       <AdminTitle title="Milestones">
-        A viewer&apos;s lifetime wager is the sum of their wagers on every leaderboard period (matched by Qzino username). Check the wager before paying.
+        Milestones are monthly: a viewer&apos;s wager is the sum of their wagers on the leaderboard periods that start that month (UTC, matched by Qzino username), and each milestone can be claimed once per month. Check the wager before paying.
       </AdminTitle>
       <Flash ok={sp.ok} error={sp.error} detail={sp.detail} />
 
@@ -24,7 +24,7 @@ export default async function AdminMilestones({ searchParams }: { searchParams: 
             {pending.map((c) => (
               <li key={c.id} className="grid gap-3 py-4 lg:grid-cols-[1fr_auto] lg:items-center">
                 <div className="text-sm">
-                  <p><span className="font-bold">{c.milestone_name}</span> · <span className="font-mono text-neon">{formatMoney(c.reward)}</span></p>
+                  <p><span className="font-bold">{c.milestone_name}</span> · <span className="font-mono text-neon">{formatMoney(c.reward)}</span>{c.claim_month && <span className="text-dim"> · {c.claim_month}</span>}</p>
                   <p className="text-muted">{c.display_name} · Qzino <span className="font-mono text-text">{c.qzino_username}</span> · wagered {formatMoney(c.wagered)} · {c.created_at}</p>
                 </div>
                 <form action={resolveClaimAction} className="flex flex-wrap gap-2">

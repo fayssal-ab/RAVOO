@@ -4,14 +4,35 @@ import { getPool } from "./db";
 import { d } from "./money";
 import { AppError, withTx } from "./tx";
 
-// Wager milestones. A viewer's lifetime wager is the sum of their wagers on
-// every leaderboard period, matched by their Qzino username. Each milestone
-// can be claimed once; the team checks and pays it from Admin → Milestones.
+// Wager milestones, monthly. A viewer's wager for the month is the sum of
+// their wagers on the leaderboard periods that start that month (UTC),
+// matched by their Qzino username. Each milestone can be claimed once per
+// month; the team checks and pays it from Admin → Milestones.
 
 export interface Milestone { id: number; name: string; min_wager: string; reward: string }
 export interface Claim {
   id: number; account_id: number; display_name: string; milestone_name: string; qzino_username: string;
   wagered: string; reward: string; status: "pending" | "paid" | "rejected"; admin_note: string; created_at: string;
+  claim_month: string;
+}
+
+/** "YYYY-MM" of a date in UTC (the milestone month). */
+export const monthKey = (date = new Date()) => date.toISOString().slice(0, 7);
+
+let schema: Promise<void> | null = null;
+/** Migration 0010 on first use if it hasn't been run (DDL: outside transactions). */
+function ensureMonthly(): Promise<void> {
+  schema ??= (async () => {
+    const pool = getPool();
+    const [cols] = await pool.query<RowDataPacket[]>(
+      "SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'milestone_claims' AND COLUMN_NAME = 'claim_month'");
+    if (cols[0]) return;
+    await pool.query("ALTER TABLE milestone_claims ADD COLUMN claim_month CHAR(7) NOT NULL DEFAULT ''");
+    await pool.query("UPDATE milestone_claims SET claim_month = DATE_FORMAT(created_at, '%Y-%m') WHERE claim_month = ''");
+    await pool.query("ALTER TABLE milestone_claims ADD UNIQUE KEY uq_claim_month (account_id, milestone_id, claim_month)");
+    await pool.query("ALTER TABLE milestone_claims DROP INDEX uq_claim");
+  })().catch((e) => { schema = null; throw e; });
+  return schema;
 }
 
 export async function listMilestones(): Promise<Milestone[]> {
@@ -19,20 +40,25 @@ export async function listMilestones(): Promise<Milestone[]> {
   return rows.map((r) => ({ id: Number(r.id), name: String(r.name), min_wager: String(r.min_wager), reward: String(r.reward) }));
 }
 
-/** Lifetime wager for a Qzino username (decimal string). */
-export async function lifetimeWager(qzinoUsername: string, conn: Pool | PoolConnection = getPool()): Promise<string> {
+/** Wager this month (periods starting in `month`) for a Qzino username (decimal string). */
+export async function monthlyWager(qzinoUsername: string, month = monthKey(), conn: Pool | PoolConnection = getPool()): Promise<string> {
   if (!qzinoUsername) return "0";
   const [rows] = await conn.query<RowDataPacket[]>(
-    "SELECT COALESCE(SUM(wagered), 0) AS total FROM lb_entries WHERE LOWER(username) = LOWER(?)", [qzinoUsername]);
+    `SELECT COALESCE(SUM(e.wagered), 0) AS total FROM lb_entries e JOIN lb_periods p ON p.id = e.period_id
+      WHERE LOWER(e.username) = LOWER(?) AND DATE_FORMAT(p.starts_at, '%Y-%m') = ?`, [qzinoUsername, month]);
   return String(rows[0].total);
 }
 
-export async function claimsFor(accountId: number): Promise<Map<number, Claim["status"]>> {
-  const [rows] = await getPool().query<RowDataPacket[]>("SELECT milestone_id, status FROM milestone_claims WHERE account_id = ?", [accountId]);
+/** This month's claims of an account, by milestone. */
+export async function claimsFor(accountId: number, month = monthKey()): Promise<Map<number, Claim["status"]>> {
+  await ensureMonthly();
+  const [rows] = await getPool().query<RowDataPacket[]>("SELECT milestone_id, status FROM milestone_claims WHERE account_id = ? AND claim_month = ?", [accountId, month]);
   return new Map(rows.map((r) => [Number(r.milestone_id), r.status]));
 }
 
 export async function claimMilestone(accountId: number, milestoneId: number): Promise<number> {
+  await ensureMonthly();
+  const month = monthKey();
   return withTx(async (conn) => {
     const [acc] = await conn.query<RowDataPacket[]>("SELECT qzino_username, banned FROM user_accounts WHERE id = ? FOR UPDATE", [accountId]);
     if (!acc[0]) throw new AppError("not_signed_in");
@@ -41,20 +67,21 @@ export async function claimMilestone(accountId: number, milestoneId: number): Pr
     if (!qzino) throw new AppError("no_qzino");
     const [ms] = await conn.query<RowDataPacket[]>("SELECT id, name, min_wager, reward FROM milestones WHERE id = ?", [milestoneId]);
     if (!ms[0]) throw new AppError("not_found");
-    const wagered = await lifetimeWager(qzino, conn);
+    const wagered = await monthlyWager(qzino, month, conn);
     if (d(wagered).lt(d(ms[0].min_wager))) throw new AppError("not_reached");
-    const [dupe] = await conn.query<RowDataPacket[]>("SELECT id FROM milestone_claims WHERE account_id = ? AND milestone_id = ?", [accountId, milestoneId]);
+    const [dupe] = await conn.query<RowDataPacket[]>("SELECT id FROM milestone_claims WHERE account_id = ? AND milestone_id = ? AND claim_month = ?", [accountId, milestoneId, month]);
     if (dupe[0]) throw new AppError("already_claimed");
     const [res] = await conn.query<ResultSetHeader>(
-      `INSERT INTO milestone_claims (account_id, milestone_id, milestone_name, qzino_username, wagered, reward)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [accountId, milestoneId, ms[0].name, qzino, wagered, ms[0].reward]
+      `INSERT INTO milestone_claims (account_id, milestone_id, milestone_name, qzino_username, wagered, reward, claim_month)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [accountId, milestoneId, ms[0].name, qzino, wagered, ms[0].reward, month]
     );
     return res.insertId;
   });
 }
 
 export async function listClaims(opts: { status?: Claim["status"]; accountId?: number; limit?: number } = {}): Promise<Claim[]> {
+  await ensureMonthly();
   const where: string[] = [];
   const args: unknown[] = [];
   if (opts.status) { where.push("c.status = ?"); args.push(opts.status); }
@@ -65,7 +92,7 @@ export async function listClaims(opts: { status?: Claim["status"]; accountId?: n
   return rows.map((r) => ({
     id: Number(r.id), account_id: Number(r.account_id), display_name: String(r.display_name), milestone_name: String(r.milestone_name),
     qzino_username: String(r.qzino_username), wagered: String(r.wagered), reward: String(r.reward), status: r.status,
-    admin_note: String(r.admin_note), created_at: String(r.created_at),
+    admin_note: String(r.admin_note), created_at: String(r.created_at), claim_month: String(r.claim_month ?? ""),
   }));
 }
 

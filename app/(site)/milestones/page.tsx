@@ -9,7 +9,7 @@ import { ConfirmButton } from "@/components/ui/ConfirmButton";
 import { Reveal, Stagger } from "@/components/ui/motion";
 import { getViewer } from "@/lib/account";
 import { QZINO_CODE, QZINO_URL } from "@/lib/constants";
-import { claimsFor, lifetimeWager, listMilestones } from "@/lib/milestones";
+import { claimsFor, listMilestones, monthKey, monthlyWager } from "@/lib/milestones";
 import { d, formatMoney } from "@/lib/money";
 import { tierFor } from "@/lib/ranks";
 import { enabledProviders } from "@/lib/userAuth";
@@ -24,15 +24,16 @@ const tint = (i: number, n: number) => tierFor(Math.round(((i + 1) / Math.max(n,
 export default async function MilestonesPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
   const [viewer, milestones] = await Promise.all([getViewer(), listMilestones().catch(() => null)]);
-  const [wagered, claims] = viewer ? await Promise.all([lifetimeWager(viewer.qzino_username), claimsFor(viewer.id)]) : ["0", new Map()];
+  const [wagered, claims] = viewer ? await Promise.all([monthlyWager(viewer.qzino_username), claimsFor(viewer.id)]) : ["0", new Map()];
+  const monthName = new Date(`${monthKey()}-01T00:00:00Z`).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
   const next = (milestones ?? []).find((m) => d(wagered).lt(d(m.min_wager)));
   const prevMin = next ? (milestones ?? []).filter((m) => d(m.min_wager).lt(d(next.min_wager))).at(-1)?.min_wager ?? "0" : null;
   const pct = next && prevMin != null ? Math.min(1, d(wagered).minus(prevMin).div(d(next.min_wager).minus(prevMin)).toNumber()) : 1;
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
-      <PageHeader eyebrow="One-time cash rewards" title="Wager" accent="milestones">
-        Every dollar you wager on Qzino under code <span className="font-mono font-bold text-neon">{QZINO_CODE}</span> counts. Hit a milestone, claim the cash.
+      <PageHeader eyebrow="Monthly cash rewards" title="Wager" accent="milestones">
+        Every dollar you wager on Qzino under code <span className="font-mono font-bold text-neon">{QZINO_CODE}</span> this month counts. Hit a milestone, claim the cash. Progress resets on the 1st of each month (UTC).
       </PageHeader>
 
       <Flash ok={sp.ok} error={sp.error} detail={sp.detail} okText="Claimed! The team checks it and pays out shortly." />
@@ -43,7 +44,7 @@ export default async function MilestonesPage({ searchParams }: { searchParams: P
           <div className="panel neon-frame is-on mb-6 p-6">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="font-head text-xs font-semibold uppercase tracking-[0.18em] text-muted">Your lifetime wager</p>
+                <p className="font-head text-xs font-semibold uppercase tracking-[0.18em] text-muted">Your wager in {monthName}</p>
                 <p className="font-mono text-4xl font-bold text-neon">{formatMoney(wagered)}</p>
                 <p className="mt-1 text-sm text-muted">
                   {viewer.qzino_username ? <>Tracking Qzino user <span className="font-mono text-text">{viewer.qzino_username}</span></> : <>Add your Qzino username on your <Link href="/account" className="text-neon underline">account</Link> to start tracking.</>}
