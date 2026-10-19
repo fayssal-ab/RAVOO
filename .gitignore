@@ -20,3 +20,6 @@ npm-debug.log*
 
 # generated Vercel env (never commit)
 deploy.env
+
+# hosting env with real credentials (never commit)
+envofnetlify.txt

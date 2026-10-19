@@ -14,6 +14,8 @@ async function main() {
   const conn = await mysql.createConnection({
     host: process.env.DB_HOST ?? "127.0.0.1", port: Number(process.env.DB_PORT ?? 3306),
     user: process.env.DB_USER ?? "root", password: process.env.DB_PASSWORD ?? "", database: process.env.DB_NAME ?? "ravo",
+    // managed hosts requiring TLS (Aiven): base64 of the CA PEM
+    ssl: process.env.DB_SSL_CA_BASE64 ? { ca: Buffer.from(process.env.DB_SSL_CA_BASE64, "base64").toString("utf8") } : undefined,
   });
   await conn.query("UPDATE slot_catalog SET active = 0");
   for (let i = 0; i < rows.length; i += 1000) {

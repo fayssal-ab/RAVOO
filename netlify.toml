@@ -1,0 +1,13 @@
+# Netlify config. The Next.js runtime handles build/publish.
+# Secret scanning: skip the Turbopack build cache (never served) and the keys
+# that are public by design (NEXT_PUBLIC_* are inlined into the browser) or
+# non-sensitive identifiers.
+
+[build]
+  command = "npm run build"
+
+[build.environment]
+  # Next.js 16 needs Node 20.9+; pin it so an older default can't break builds.
+  NODE_VERSION = "22"
+  SECRETS_SCAN_OMIT_PATHS = ".next/cache/**,.netlify/.next/cache/**"
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SITE_URL,NEXT_PUBLIC_QZINO_CODE,NEXT_PUBLIC_QZINO_URL,NEXT_PUBLIC_KICK_CHANNEL,NEXT_PUBLIC_DISCORD_URL,NEXT_PUBLIC_X_URL,ADMIN_USERNAME,DB_PORT,DB_HOST,DB_NAME,DB_USER,KICK_CLIENT_ID,KICK_CHATROOM_ID,DISCORD_CLIENT_ID,SLOTS_FEED_URL,DB_POOL_LIMIT"

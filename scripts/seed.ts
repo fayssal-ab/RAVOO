@@ -37,6 +37,8 @@ async function main() {
     user: process.env.DB_USER ?? "root",
     password: process.env.DB_PASSWORD ?? "",
     database: process.env.DB_NAME ?? "ravo",
+    // managed hosts requiring TLS (Aiven): base64 of the CA PEM
+    ssl: process.env.DB_SSL_CA_BASE64 ? { ca: Buffer.from(process.env.DB_SSL_CA_BASE64, "base64").toString("utf8") } : undefined,
   });
 
   for (let level = 1; level <= MAX_LEVEL; level++) {
