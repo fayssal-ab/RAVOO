@@ -29,6 +29,7 @@ export const NAV: NavItem[] = [
   { href: "/", label: "Home" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/milestones", label: "Milestones" },
+  { href: "/challenges", label: "Challenges" },
   {
     href: "/stream",
     label: "Stream",
@@ -47,6 +48,7 @@ export const NAV_FLAT = [
   { href: "/", label: "Home" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/milestones", label: "Milestones" },
+  { href: "/challenges", label: "Challenges" },
   { href: "/stream", label: "Stream" },
   { href: "/bonus-hunts", label: "Bonus hunts" },
   { href: "/tournaments", label: "Tournaments" },

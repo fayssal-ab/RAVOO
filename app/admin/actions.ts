@@ -6,6 +6,7 @@ import { addBonus, createHunt, deleteBonus, deleteHunt, finishHunt, moveBonus, r
 import { syncCatalog, upgradeTypedSlots } from "@/lib/slots";
 import { deleteClaim, resolveClaim, saveMilestones } from "@/lib/milestones";
 import { addSlot, deleteSlot } from "@/lib/stream";
+import { createChallenge, deleteChallenge, markChallengeWon, setChallengeStatus } from "@/lib/challenges";
 import { cancelRaffle, createRaffle, deleteRaffle, drawRaffle } from "@/lib/raffles";
 import { deleteStoreItem, resolveRedemption, saveStoreItem } from "@/lib/store";
 import { AppError, DECIMAL_20_8, parseForm, zId, zLevel, zPoints, zRequiredText, zText, zUtcDateTime } from "@/lib/tx";
@@ -234,3 +235,32 @@ export async function deleteSlotAction(form: FormData) {
     return { id };
   });
 }
+
+// ── challenges ─────────────────────────────────────────────────────────
+const zMulti = z.string().trim().regex(/^\d{1,9}(\.\d{1,2})?$/, "invalid_multi");
+
+export async function createChallengeAction(form: FormData) {
+  await adminAction({ path: "/admin/challenges", audit: "challenge.create", revalidate: ["/challenges"] }, async () => {
+    const v = parseForm(z.object({
+      slot_id: zText(191), slot: zText(120), provider: zText(64), target_multi: zMulti, reward: zMoneyStr,
+      min_bet: z.union([z.literal(""), zMoneyStr]).default(""),
+    }), form);
+    return { id: await createChallenge(v), slot: v.slot, target: v.target_multi, reward: v.reward };
+  });
+}
+
+export async function challengeOpAction(form: FormData) {
+  await adminAction({ path: "/admin/challenges", audit: "challenge.update", revalidate: ["/challenges"] }, async () => {
+    const v = parseForm(z.object({
+      id: zId, op: z.enum(["won", "close", "reopen", "delete"]),
+      winner: zText(64).optional(), winner_multi: z.union([z.literal(""), zMulti]).optional(),
+    }), form);
+    if (v.op === "won") {
+      if (!v.winner || !v.winner_multi) throw new AppError("invalid_input", "enter the winner and their multi");
+      await markChallengeWon(v.id, v.winner, v.winner_multi);
+    } else if (v.op === "delete") await deleteChallenge(v.id);
+    else await setChallengeStatus(v.id, v.op === "close" ? "closed" : "open");
+    return v;
+  });
+}
+

@@ -103,7 +103,7 @@ export function TopBar({ viewer, live }: { viewer: TopBarViewer | null; live: bo
           <LiveBadge live={live} />
         </Link>
 
-        <nav className="ml-auto hidden items-center gap-0.5 lg:flex" aria-label="Main">
+        <nav className="ml-auto hidden items-center gap-0.5 xl:flex" aria-label="Main">
           {NAV.map((n) =>
             n.children ? (
               <StreamMenu key={n.href} item={n} active={n.children.some((c) => isActive(c.href))} />
@@ -121,11 +121,11 @@ export function TopBar({ viewer, live }: { viewer: TopBarViewer | null; live: bo
           )}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2 lg:ml-3">
+        <div className="ml-auto flex items-center gap-2 xl:ml-3">
           <NavActions viewer={viewer} />
           <button
             type="button"
-            className="grid size-10 place-items-center rounded-xl border border-line-hot text-text lg:hidden"
+            className="grid size-10 place-items-center rounded-xl border border-line-hot text-text xl:hidden"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-label={open ? "Close menu" : "Open menu"}
@@ -141,7 +141,7 @@ export function TopBar({ viewer, live }: { viewer: TopBarViewer | null; live: bo
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="panel mx-auto mt-2 max-w-6xl p-3 lg:hidden"
+            className="panel mx-auto mt-2 max-w-6xl p-3 xl:hidden"
             aria-label="Mobile"
           >
             <div className="grid grid-cols-2 gap-1">
