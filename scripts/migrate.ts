@@ -25,6 +25,26 @@ function sslOption(): mysql.ConnectionOptions["ssl"] {
   return undefined;
 }
 
+// Migrations whose columns the app can also add on first use (see
+// ensureKoSchema / ensureMonthly) carry this marker: they run statement by
+// statement and skip "already exists / already gone" errors, so running
+// them after the app self-healed is safe.
+const IDEMPOTENT = "-- migrate: tolerate-existing";
+const ALREADY_DONE = new Set([1060 /* dup column */, 1061 /* dup key */, 1091 /* can't drop: missing */]);
+
+async function applyTolerant(conn: mysql.Connection, sql: string): Promise<void> {
+  const statements = sql.split(/;\s*(?:\n|$)/).map((x) => x.trim()).filter((x) => x.replace(/--.*$/gm, "").trim());
+  for (const st of statements) {
+    try {
+      await conn.query(st);
+    } catch (err) {
+      const errno = (err as { errno?: number }).errno;
+      if (errno == null || !ALREADY_DONE.has(errno)) throw err;
+      process.stdout.write(`(skipped: ${(err as Error).message}) `);
+    }
+  }
+}
+
 async function main() {
   const fresh = process.argv.includes("--fresh");
   const host = env("DB_HOST", "localhost");
@@ -70,7 +90,8 @@ async function main() {
     const sql = readFileSync(join(MIGRATIONS_DIR, file), "utf8");
     process.stdout.write(`applying ${file} … `);
     try {
-      await root.query(sql);
+      if (sql.includes(IDEMPOTENT)) await applyTolerant(root, sql);
+      else await root.query(sql);
       await root.query("INSERT INTO schema_migrations (filename) VALUES (?)", [file]);
       count++;
       console.log("ok");

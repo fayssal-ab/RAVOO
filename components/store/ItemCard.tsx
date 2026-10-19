@@ -15,6 +15,8 @@ export interface ItemView {
   stock: number | null;
 }
 
+const KIND_LABEL: Record<ItemView["kind"], string> = { cash: "Qzino tip", bonus: "Bonus buy split", merch: "Merch", other: "Reward" };
+
 /** Store art by item type; the top reward (rank 40) gets the vault. */
 function artFor(item: ItemView): string {
   if (item.min_rank >= 40) return "/media/store/vault.webp";
@@ -39,8 +41,8 @@ export function ItemCard({ item, locked, action }: { item: ItemView; locked: boo
           className={`size-full object-cover transition duration-700 group-hover:scale-110 ${locked ? "opacity-50 grayscale" : ""}`}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-1/2 mix-blend-color opacity-50" style={{ background: `linear-gradient(0deg, ${tier.color}, transparent)` }} />
-        <div className="absolute left-3 top-3"><RankBadge level={item.min_rank} compact /></div>
+        {item.min_rank > 1 && <div className="absolute inset-x-0 bottom-0 h-1/2 mix-blend-color opacity-50" style={{ background: `linear-gradient(0deg, ${tier.color}, transparent)` }} />}
+        {item.min_rank > 1 && <div className="absolute left-3 top-3"><RankBadge level={item.min_rank} compact /></div>}
         {item.stock != null && (
           <span className="chip absolute right-3 top-3 !py-0.5 text-[0.7rem]">{item.stock > 0 ? `${item.stock} left` : "Sold out"}</span>
         )}
@@ -53,9 +55,11 @@ export function ItemCard({ item, locked, action }: { item: ItemView; locked: boo
         )}
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <p className="font-head text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: tier.color }}>{item.rank_name}</p>
+        <p className="font-head text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: item.min_rank > 1 ? tier.color : "var(--color-neon)" }}>
+          {KIND_LABEL[item.kind]}{item.min_rank > 1 ? ` · ${item.rank_name}` : ""}
+        </p>
         <h3 className="mt-1 font-head text-xl font-bold leading-tight">{item.name}</h3>
-        {item.description && <p className="mt-2 line-clamp-2 text-sm text-muted">{item.description}</p>}
+        {item.description && <p className="mt-2 text-sm text-muted">{item.description}</p>}
         <div className="mt-auto flex items-center justify-between gap-3 pt-5">
           <span className="flex items-center gap-1.5 font-mono text-2xl font-bold text-neon">
             <Coins className="size-5" />

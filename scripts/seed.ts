@@ -6,17 +6,12 @@ import { defaultMinXp, defaultRankName, MAX_LEVEL } from "../lib/ranks";
 
 // Store unlocks from rank 31 to 40. Prices 20 → 800 as specified, then the
 // doubling continues for the last four ranks (editable in Admin → Store).
-const STORE: { min_rank: number; price: number; name: string; kind: "cash" | "bonus" | "merch" }[] = [
-  { min_rank: 31, price: 20, name: "$5 Qzino tip", kind: "cash" },
-  { min_rank: 32, price: 50, name: "$10 Qzino tip", kind: "cash" },
-  { min_rank: 33, price: 100, name: "$25 Qzino tip", kind: "cash" },
-  { min_rank: 34, price: 200, name: "$50 Qzino tip", kind: "cash" },
-  { min_rank: 35, price: 400, name: "$100 Qzino tip", kind: "cash" },
-  { min_rank: 36, price: 800, name: "$200 Qzino tip", kind: "cash" },
-  { min_rank: 37, price: 1600, name: "$400 Qzino tip", kind: "cash" },
-  { min_rank: 38, price: 3200, name: "Bonus buy on stream", kind: "bonus" },
-  { min_rank: 39, price: 6400, name: "RAVO merch pack", kind: "merch" },
-  { min_rank: 40, price: 12800, name: "$2,500 Never Sleeps reward", kind: "cash" },
+const STORE: { min_rank: number; price: number; name: string; kind: "cash" | "bonus" | "merch"; description: string }[] = [
+  { min_rank: 1, price: 20, name: "$5 Qzino tip", kind: "cash", description: "A $5 tip sent to your Qzino account (your Qzino username must be set on your account)." },
+  { min_rank: 1, price: 50, name: "$10 Qzino tip", kind: "cash", description: "A $10 tip sent to your Qzino account (your Qzino username must be set on your account)." },
+  { min_rank: 1, price: 100, name: "$20 Qzino tip", kind: "cash", description: "A $20 tip sent to your Qzino account (your Qzino username must be set on your account)." },
+  { min_rank: 1, price: 200, name: "$40 bonus buy split", kind: "bonus", description: "Ravo opens a $40 bonus buy on stream for you and splits the win with you." },
+  { min_rank: 1, price: 400, name: "$100 bonus buy split", kind: "bonus", description: "Ravo opens a $100 bonus buy on stream for you and splits the win with you." },
 ];
 
 const MILESTONES: [string, number, number][] = [
@@ -51,7 +46,7 @@ async function main() {
     for (const [i, it] of STORE.entries()) {
       await conn.query(
         "INSERT INTO store_items (name, description, kind, price, min_rank, sort) VALUES (?, ?, ?, ?, ?, ?)",
-        [it.name, `Unlocks at rank ${it.min_rank}. Paid out after a quick check by the team.`, it.kind, it.price, it.min_rank, i]
+        [it.name, it.description, it.kind, it.price, it.min_rank, i]
       );
     }
     console.log(`store: ${STORE.length} items added`);

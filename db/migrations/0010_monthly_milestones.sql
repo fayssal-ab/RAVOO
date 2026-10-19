@@ -1,3 +1,4 @@
+-- migrate: tolerate-existing
 -- Milestones are monthly: the wager counts per calendar month (UTC, by the
 -- leaderboard period's start) and each milestone can be claimed once a month.
 ALTER TABLE milestone_claims ADD COLUMN claim_month CHAR(7) NOT NULL DEFAULT '';

@@ -1,3 +1,4 @@
+-- migrate: tolerate-existing
 -- Duo (2v2) tournaments: players register alone, then get paired at random.
 -- team_size 1 = solo, 2 = duo. Both members carry the captain's id in
 -- team_id; the bracket runs on captains. Matches keep the second bonus of
