@@ -8,6 +8,7 @@ import {
   addPlayerManually, cancelRoll, closeRegistration, confirmRoll, createKo, focusNext, openRegistration,
   recordBattleResult, resetKo, rollPlayers, startBattle,
 } from "@/lib/knockout";
+import { ensureChatSubscription } from "@/lib/kickApi";
 import { findSlotByName } from "@/lib/slots";
 import { AppError } from "@/lib/tx";
 
@@ -42,7 +43,11 @@ export async function POST(request: Request) {
     let result: unknown = null;
     switch (body.action) {
       case "create": result = { id: await createKo({ title: body.title, prize: body.prize, size: body.size, prizes: body.prizes }) }; break;
-      case "open": await openRegistration(body.id); break;
+      case "open":
+        await openRegistration(body.id);
+        // official Kick webhook for !join (best effort; the dashboard socket is the fallback)
+        result = { kickWebhook: await ensureChatSubscription().catch((e: Error) => `failed: ${e.message}`) };
+        break;
       case "close": await closeRegistration(body.id); break;
       case "reset": await resetKo(body.id); break;
       case "roll": result = await rollPlayers(body.id); break;

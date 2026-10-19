@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { ArrowRight, Trophy } from "lucide-react";
-import { Chip, Club, DripEdge, Paw, Spade } from "@/components/decor/shapes";
+import { DripEdge, Paw } from "@/components/decor/shapes";
 import { CopyCode } from "@/components/ui/CopyCode";
 import { useSiteReady } from "@/components/shell/siteReady";
+import { HeroBackdrop } from "./HeroBackdrop";
 import { SlotReels } from "./SlotReels";
 import { QzinoLogo } from "@/components/ui/QzinoLogo";
 
@@ -16,7 +17,7 @@ const TITLE = "NEVERSLEEPS".split("");
 const CLIMB_AT = 2.55;
 
 // Toastyy-style mascot band in RAVO's world: the dancing pug over a chrome
-// spike backdrop, chips and suits orbiting, the name in metal chrome, and the
+// spike wallpaper with spinning card suits, the name in metal chrome, and the
 // band dripping slime into the page.
 export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string; pool: string | null }) {
   const ref = useRef<HTMLElement>(null);
@@ -26,31 +27,14 @@ export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string;
   const bgY = useTransform(scrollYProgress, [0, 1], ["0%", reduce ? "0%" : "25%"]);
   const pugY = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : -120]);
 
-  const px = useMotionValue(0);
-  const py = useMotionValue(0);
-  const sx = useSpring(px, { stiffness: 70, damping: 18 });
-  const sy = useSpring(py, { stiffness: 70, damping: 18 });
-  const near = { x: useTransform(sx, [-1, 1], [-26, 26]), y: useTransform(sy, [-1, 1], [-18, 18]) };
-  const far = { x: useTransform(sx, [-1, 1], [12, -12]), y: useTransform(sy, [-1, 1], [8, -8]) };
-
   return (
     <section
       ref={ref}
       className="relative isolate -mt-[calc(var(--nav-h)+1.5rem)] pt-[calc(var(--nav-h)+2rem)]"
-      onPointerMove={(e) => {
-        if (reduce) return;
-        const r = e.currentTarget.getBoundingClientRect();
-        px.set(((e.clientX - r.left) / r.width) * 2 - 1);
-        py.set(((e.clientY - r.top) / r.height) * 2 - 1);
-      }}
-      onPointerLeave={() => { px.set(0); py.set(0); }}
     >
       {/* band */}
-      <div className="absolute inset-x-0 top-0 bottom-16 -z-10 overflow-hidden bg-[radial-gradient(ellipse_at_50%_30%,#123d0c_0%,#0a2208_45%,#061505_100%)] sm:bottom-24">
-        <motion.div className="absolute inset-0" style={{ y: bgY }}>
-          <Image src="/media/chrome-spikes.webp" alt="" fill priority sizes="100vw" className="object-cover object-top opacity-30 mix-blend-screen" />
-        </motion.div>
-        <div className="pixel-grid opacity-70" />
+      <div className="absolute inset-x-0 top-0 bottom-16 -z-10 overflow-hidden sm:bottom-24">
+        <HeroBackdrop y={bgY} />
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-[#061505]" />
       </div>
 
@@ -58,19 +42,6 @@ export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string;
         {/* mascot stage */}
         <motion.div style={{ y: pugY }} className="relative h-56 w-56 sm:h-72 sm:w-72">
           <motion.div aria-hidden className="absolute inset-6 rounded-full bg-neon/30 blur-3xl" animate={{ opacity: [0.5, 0.9, 0.5], scale: [0.95, 1.05, 0.95] }} transition={{ duration: 3.5, repeat: Infinity }} />
-          {/* orbiting chips & suits (parallax with pointer) */}
-          <motion.div aria-hidden style={far} className="absolute -left-16 top-6 sm:-left-28">
-            <Chip className="size-16 animate-float text-neon drop-shadow-[0_0_14px_rgb(141_255_74/0.6)] sm:size-20" />
-          </motion.div>
-          <motion.div aria-hidden style={near} className="absolute -right-14 top-2 sm:-right-24">
-            <Spade className="size-12 animate-float-slow rotate-12 text-silver drop-shadow-[0_0_10px_rgb(217_225_220/0.5)] sm:size-16" />
-          </motion.div>
-          <motion.div aria-hidden style={near} className="absolute -left-10 bottom-4 sm:-left-20">
-            <Club className="size-10 animate-float-slow -rotate-12 text-neon/80 sm:size-14" />
-          </motion.div>
-          <motion.div aria-hidden style={far} className="absolute -right-12 bottom-10 sm:-right-24">
-            <Chip className="size-12 animate-float text-violet drop-shadow-[0_0_12px_rgb(155_107_255/0.6)] sm:size-14" />
-          </motion.div>
           {/* the pug climbs up from behind the RAVO reels once they've landed:
               peeks, holds, then pulls himself up (clipped at the reels' edge) */}
           <div className="absolute inset-x-[-15%] -top-[25%] bottom-0 overflow-hidden">

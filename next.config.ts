@@ -29,6 +29,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  images: { qualities: [75, 90] },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
