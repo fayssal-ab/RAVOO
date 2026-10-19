@@ -1,0 +1,75 @@
+// Safe defaults only: the 40-level rank ladder and the starter store items.
+// Re-running never overwrites what an admin has edited (INSERT IGNORE / only
+// when the store is empty). No fake leaderboard or users.
+import mysql from "mysql2/promise";
+import { defaultMinXp, defaultRankName, MAX_LEVEL } from "../lib/ranks";
+
+// Store unlocks from rank 31 to 40. Prices 20 → 800 as specified, then the
+// doubling continues for the last four ranks (editable in Admin → Store).
+const STORE: { min_rank: number; price: number; name: string; kind: "cash" | "bonus" | "merch" }[] = [
+  { min_rank: 31, price: 20, name: "$5 Qzino tip", kind: "cash" },
+  { min_rank: 32, price: 50, name: "$10 Qzino tip", kind: "cash" },
+  { min_rank: 33, price: 100, name: "$25 Qzino tip", kind: "cash" },
+  { min_rank: 34, price: 200, name: "$50 Qzino tip", kind: "cash" },
+  { min_rank: 35, price: 400, name: "$100 Qzino tip", kind: "cash" },
+  { min_rank: 36, price: 800, name: "$200 Qzino tip", kind: "cash" },
+  { min_rank: 37, price: 1600, name: "$400 Qzino tip", kind: "cash" },
+  { min_rank: 38, price: 3200, name: "Bonus buy on stream", kind: "bonus" },
+  { min_rank: 39, price: 6400, name: "RAVO merch pack", kind: "merch" },
+  { min_rank: 40, price: 12800, name: "$2,500 Never Sleeps reward", kind: "cash" },
+];
+
+const MILESTONES: [string, number, number][] = [
+  ["Dreamer", 5_000, 10],
+  ["Restless", 10_000, 25],
+  ["Night Owl", 25_000, 50],
+  ["Insomniac", 50_000, 75],
+  ["Midnight", 100_000, 150],
+  ["Nocturnal", 250_000, 300],
+  ["Sleepless", 500_000, 500],
+  ["Never Sleeps", 1_000_000, 1_000],
+];
+
+async function main() {
+  const conn = await mysql.createConnection({
+    host: process.env.DB_HOST ?? "127.0.0.1",
+    port: Number(process.env.DB_PORT ?? 3306),
+    user: process.env.DB_USER ?? "root",
+    password: process.env.DB_PASSWORD ?? "",
+    database: process.env.DB_NAME ?? "ravo",
+  });
+
+  for (let level = 1; level <= MAX_LEVEL; level++) {
+    await conn.query("INSERT IGNORE INTO ranks (level, name, min_xp) VALUES (?, ?, ?)", [level, defaultRankName(level), defaultMinXp(level)]);
+  }
+  console.log(`ranks: ${MAX_LEVEL} levels ensured`);
+
+  const [[{ n }]] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) AS n FROM store_items");
+  if (Number(n) === 0) {
+    for (const [i, it] of STORE.entries()) {
+      await conn.query(
+        "INSERT INTO store_items (name, description, kind, price, min_rank, sort) VALUES (?, ?, ?, ?, ?, ?)",
+        [it.name, `Unlocks at rank ${it.min_rank}. Paid out after a quick check by the team.`, it.kind, it.price, it.min_rank, i]
+      );
+    }
+    console.log(`store: ${STORE.length} items added`);
+  } else {
+    console.log("store: already has items, left alone");
+  }
+  // Wager milestones: placeholders to edit in Admin → Milestones before launch.
+  const [[{ m }]] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) AS m FROM milestones");
+  if (Number(m) === 0) {
+    for (const [name, wager, reward] of MILESTONES) {
+      await conn.query("INSERT INTO milestones (name, min_wager, reward) VALUES (?, ?, ?)", [name, wager, reward]);
+    }
+    console.log(`milestones: ${MILESTONES.length} added`);
+  } else {
+    console.log("milestones: already set, left alone");
+  }
+  await conn.end();
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

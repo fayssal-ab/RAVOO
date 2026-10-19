@@ -1,0 +1,57 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { saveQzinoUsername } from "@/lib/account";
+import { claimMilestone } from "@/lib/milestones";
+import { buyTickets } from "@/lib/raffles";
+import { rateLimit } from "@/lib/ratelimit";
+import { redeemItem } from "@/lib/store";
+import { AppError, parseForm, zId } from "@/lib/tx";
+import { currentAccountId } from "@/lib/userAuth";
+
+// Viewer Server Actions. Each re-checks the session (actions are public POST
+// endpoints) and reports back through ?ok= / ?error= on the page it came from.
+
+async function run(path: string, ok: string, fn: (accountId: number) => Promise<unknown>): Promise<never> {
+  let query: string;
+  try {
+    const accountId = await currentAccountId();
+    if (accountId == null) throw new AppError("not_signed_in");
+    const limit = await rateLimit(`viewer:${accountId}`, 30, 60);
+    if (!limit.ok) throw new AppError("unexpected", "too many requests, slow down");
+    await fn(accountId);
+    query = `ok=${ok}`;
+  } catch (err) {
+    if (err instanceof AppError) query = `error=${err.code}${err.detail ? `&detail=${encodeURIComponent(err.detail)}` : ""}`;
+    else {
+      console.error("viewer action failed", err instanceof Error ? err.message : "unknown");
+      query = "error=unexpected";
+    }
+  }
+  revalidatePath("/", "layout");
+  redirect(`${path}?${query}`);
+}
+
+export async function redeemAction(form: FormData) {
+  await run("/store", "redeemed", (id) => redeemItem(id, parseForm(z.object({ item: zId }), form).item));
+}
+
+export async function buyTicketsAction(form: FormData) {
+  await run("/raffles", "tickets", (id) => {
+    const v = parseForm(z.object({ raffle: zId, count: z.coerce.number().int().min(1).max(1000) }), form);
+    return buyTickets(id, v.raffle, v.count);
+  });
+}
+
+export async function saveQzinoAction(form: FormData) {
+  await run("/account", "saved", (id) => {
+    const v = parseForm(z.object({ qzino: z.string().trim().max(64).regex(/^[\w.-]*$/, "letters, numbers, . _ - only") }), form);
+    return saveQzinoUsername(id, v.qzino);
+  });
+}
+
+export async function claimMilestoneAction(form: FormData) {
+  await run("/milestones", "claimed", (id) => claimMilestone(id, parseForm(z.object({ milestone: zId }), form).milestone));
+}

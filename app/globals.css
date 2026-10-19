@@ -1,0 +1,339 @@
+@import "tailwindcss";
+
+/* RAVONEVERSLEEPS — black table, toxic-green neon, chrome spikes, a little
+   violet from the dream world. Tokens first, then the handful of effects the
+   whole site shares (chrome text, neon frame, pressable button, smoke). */
+
+@theme {
+  --color-bg: #040605;
+  --color-bg-2: #070b08;
+  --color-surface: #0b110c;
+  --color-surface-2: #101912;
+  --color-surface-3: #16231a;
+  --color-line: rgb(141 255 74 / 0.10);
+  --color-line-hot: rgb(141 255 74 / 0.32);
+  --color-neon: #8dff4a;
+  --color-neon-bright: #c3ff8f;
+  --color-neon-deep: #2e7d12;
+  --color-neon-ink: #0b1f04;
+  --color-violet: #9b6bff;
+  --color-violet-deep: #4c2a9e;
+  --color-gold: #ffd76a;
+  --color-silver: #d9e1dc;
+  --color-bronze: #e09a5c;
+  --color-text: #e9f5ec;
+  --color-muted: #9fb3a5;
+  --color-dim: #5e7064;
+  --color-danger: #ff5f6d;
+
+  /* next/font exposes each Google font as an --nf-* variable (app/layout.tsx) */
+  --font-display: var(--nf-metal), serif;
+  --font-head: var(--nf-chakra), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--nf-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--nf-mono), ui-monospace, monospace;
+  --font-pixel: var(--nf-pixel), ui-monospace, monospace;
+
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-float-slow: float 11s ease-in-out infinite reverse;
+  --animate-flicker: flicker 6s linear infinite;
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-spin-slow: spin 14s linear infinite;
+  --animate-shine: shine 3.2s ease-in-out infinite;
+
+  --animate-peek: peek 5.5s ease-in-out infinite;
+  --animate-dance: dance 2.6s ease-in-out infinite;
+
+  @keyframes peek {
+    0%, 100% { transform: translateY(16%) rotate(-4deg); }
+    45%, 60% { transform: translateY(0) rotate(3deg); }
+  }
+  @keyframes dance {
+    0%, 100% { transform: translateY(0) rotate(-4deg); }
+    25% { transform: translateY(-14px) rotate(2deg); }
+    50% { transform: translateY(0) rotate(4deg); }
+    75% { transform: translateY(-8px) rotate(-1deg); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+    50% { transform: translate3d(0, -14px, 0) rotate(3deg); }
+  }
+  @keyframes flicker {
+    0%, 19%, 21%, 23%, 54%, 56%, 100% { opacity: 1; }
+    20%, 22%, 55% { opacity: 0.55; }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes shine {
+    0% { background-position: 200% 50%; }
+    60%, 100% { background-position: -100% 50%; }
+  }
+}
+
+:root {
+  color-scheme: dark;
+  --nav-h: 72px;
+}
+
+html { background: var(--color-bg); scroll-behavior: smooth; }
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--color-neon); color: var(--color-neon-ink); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-surface-3); border: 2px solid var(--color-bg); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-neon-deep); }
+
+:focus-visible { outline: 2px solid var(--color-neon); outline-offset: 3px; border-radius: 6px; }
+
+/* ── type ───────────────────────────────────────────────────────────── */
+
+/* Liquid-chrome lettering like the logo: silver with a green core, a hard
+   dark edge and a neon halo. */
+.chrome {
+  background: linear-gradient(180deg, #ffffff 0%, #dfe7e2 22%, #7f8c85 45%, #f4fff0 52%, #a7ff6e 64%, #3c5a40 82%, #e9f5ec 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.9)) drop-shadow(0 0 18px rgb(141 255 74 / 0.35));
+}
+.chrome-shine {
+  background: linear-gradient(110deg, #9fb3a5 0%, #e9f5ec 35%, #ffffff 45%, #c3ff8f 50%, #e9f5ec 55%, #9fb3a5 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: var(--animate-shine);
+}
+.neon-text {
+  color: var(--color-neon);
+  text-shadow: 0 0 6px rgb(141 255 74 / 0.75), 0 0 22px rgb(141 255 74 / 0.45), 0 0 48px rgb(141 255 74 / 0.25);
+}
+.eyebrow {
+  font-family: var(--font-pixel);
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-neon);
+}
+
+/* ── surfaces ───────────────────────────────────────────────────────── */
+
+.panel {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.025), transparent 40%),
+    var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 1.25rem;
+}
+
+/* Animated neon frame (conic border) — add to a .panel. */
+.neon-frame { isolation: isolate; }
+.neon-frame::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from var(--angle, 0deg), transparent 0 60%, var(--color-neon) 75%, var(--color-neon-bright) 80%, transparent 92%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s;
+  animation: frame-spin 4s linear infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+.neon-frame:hover::before, .neon-frame.is-on::before { opacity: 1; }
+@property --angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@keyframes frame-spin { to { --angle: 360deg; } }
+
+/* Cursor spotlight on cards: JS sets --mx/--my. */
+.spotlight { background-image: radial-gradient(420px circle at var(--mx, 50%) var(--my, -200px), rgb(141 255 74 / 0.09), transparent 45%); }
+
+/* Chunky pressable button with a solid bottom edge. */
+.btn {
+  --edge: var(--color-neon-deep);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-head);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 0.9rem;
+  padding: 0.8rem 1.35rem;
+  box-shadow: 0 4px 0 0 var(--edge);
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease, filter 150ms ease;
+  white-space: nowrap;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 5px 0 0 var(--edge); }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 0 var(--edge); }
+.btn:disabled { opacity: 0.45; pointer-events: none; }
+.btn-neon {
+  background: linear-gradient(180deg, var(--color-neon-bright), var(--color-neon) 45%, #5fd327);
+  color: var(--color-neon-ink);
+  box-shadow: 0 4px 0 0 var(--edge), 0 0 28px rgb(141 255 74 / 0.35);
+}
+.btn-neon:hover { box-shadow: 0 5px 0 0 var(--edge), 0 0 44px rgb(141 255 74 / 0.55); }
+.btn-ghost {
+  --edge: #050805;
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border: 1px solid var(--color-line-hot);
+}
+.btn-ghost:hover { background: var(--color-surface-3); }
+.btn-violet {
+  --edge: #2a1563;
+  background: linear-gradient(180deg, #b896ff, var(--color-violet));
+  color: #12072e;
+}
+.btn-sm { padding: 0.5rem 0.9rem; font-size: 0.78rem; border-radius: 0.7rem; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-line-hot);
+  background: rgb(141 255 74 / 0.06);
+  padding: 0.3rem 0.75rem;
+  font-family: var(--font-head);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.field {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-line-hot);
+  background: var(--color-bg-2);
+  padding: 0.65rem 0.85rem;
+  color: var(--color-text);
+  font-size: 0.92rem;
+}
+.field:focus { outline: none; border-color: var(--color-neon); box-shadow: 0 0 0 3px rgb(141 255 74 / 0.18); }
+.label { display: block; margin-bottom: 0.35rem; font-family: var(--font-head); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-muted); }
+
+/* ── atmosphere ─────────────────────────────────────────────────────── */
+
+/* Fixed backdrop: drifting green smoke, a faint pixel grid, film grain. */
+.backdrop { position: fixed; inset: 0; z-index: -10; pointer-events: none; overflow: hidden; }
+.smoke {
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.22;
+  mix-blend-mode: screen;
+}
+.smoke-a { background: radial-gradient(circle, #3f9f1c 0%, transparent 65%); top: -30vmax; left: -20vmax; animation: drift-a 26s ease-in-out infinite alternate; }
+.smoke-b { background: radial-gradient(circle, #1f5f10 0%, transparent 60%); bottom: -35vmax; right: -25vmax; animation: drift-b 32s ease-in-out infinite alternate; }
+.smoke-c { background: radial-gradient(circle, #4c2a9e 0%, transparent 60%); top: 30%; left: 55%; width: 45vmax; height: 45vmax; opacity: 0.12; animation: drift-a 40s ease-in-out infinite alternate-reverse; }
+@keyframes drift-a { to { transform: translate3d(18vw, 14vh, 0) scale(1.15); } }
+@keyframes drift-b { to { transform: translate3d(-16vw, -12vh, 0) scale(1.1); } }
+.pixel-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgb(141 255 74 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(141 255 74 / 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 70%);
+}
+.grain {
+  position: absolute;
+  inset: -50%;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 1.2s steps(6) infinite;
+}
+@keyframes grain {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-6%, 4%); }
+  40% { transform: translate(5%, -6%); }
+  60% { transform: translate(-3%, 7%); }
+  80% { transform: translate(7%, 2%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* CRT scanlines for pixel-art media. */
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgb(0 0 0 / 0.22) 0 1px, transparent 1px 3px);
+  mix-blend-mode: multiply;
+}
+
+/* Four-point sparkle like the art. */
+.spark {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: var(--color-neon-bright);
+  clip-path: polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%);
+  filter: drop-shadow(0 0 6px var(--color-neon));
+  animation: twinkle 3s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.6) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(45deg); }
+}
+
+.mask-fade-x { mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.mask-fade-b { mask-image: linear-gradient(180deg, #000 60%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
+
+/* ── knockout tournament (ported from ONO, RAVO colours) ── */
+:root { --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes ko-slide-l { 0% { transform: translateX(-70px) rotate(-4deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes ko-slide-r { 0% { transform: translateX(70px) rotate(4deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes ko-vs-slam {
+  0% { transform: scale(3.2) rotate(-14deg); opacity: 0; filter: blur(8px); }
+  55% { transform: scale(0.88) rotate(4deg); opacity: 1; filter: blur(0); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes ko-glow {
+  0%, 100% { box-shadow: 0 0 0 2px rgb(255 215 106 / 0.6), 0 0 32px -6px var(--color-gold); }
+  50% { box-shadow: 0 0 0 2px var(--color-gold), 0 0 70px -4px var(--color-gold); }
+}
+@keyframes ko-crown { 0% { transform: translateY(-40px) scale(0.4); opacity: 0; } 60% { transform: translateY(4px) scale(1.15); opacity: 1; } 100% { transform: none; } }
+@keyframes ko-burst { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--bx), var(--by)) scale(0.3); opacity: 0; } }
+@keyframes ko-sheen { 0% { transform: translateX(-120%) skewX(-18deg); } 100% { transform: translateX(260%) skewX(-18deg); } }
+@keyframes ko-bolt { 0%, 100% { opacity: 0.25; } 10%, 14% { opacity: 1; } 12% { opacity: 0.4; } }
+@keyframes entrant-in { 0% { transform: scale(0.85) translateY(6px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.ko-slide-l { animation: ko-slide-l 0.6s var(--ease-out-expo) both; }
+.ko-slide-r { animation: ko-slide-r 0.6s var(--ease-out-expo) both; }
+.ko-vs { animation: ko-vs-slam 0.65s var(--ease-out-expo) 0.25s both; }
+.ko-glow { animation: ko-glow 2.4s ease-in-out infinite; }
+.ko-crown { animation: ko-crown 0.8s var(--ease-out-expo) both; }
+.ko-burst { animation: ko-burst 1.6s ease-out forwards; }
+.ko-sheen { animation: ko-sheen 3s ease-in-out infinite; }
+.ko-bolt { animation: ko-bolt 3.2s linear infinite; }
+.entrant-in { animation: entrant-in 0.35s var(--ease-out-expo) both; }
+
+/* Images and icons can't be selected, dragged or long-press-saved; text stays selectable. */
+img, svg, video, canvas, picture {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
