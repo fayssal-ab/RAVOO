@@ -354,3 +354,11 @@ iframe[src*=".netlify/scripts/hud"],
   10%, 30% { transform: rotate(14deg); }
   20%, 40% { transform: rotate(-12deg); }
 }
+
+/* Zzz game (components/game/ZzzGame.tsx) */
+@keyframes zzz-hit { 0% { scale: 1; } 40% { scale: 0.85; } 100% { scale: 1; } }
+@keyframes zzz-pop { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
+@keyframes zzz-shard { to { transform: translate(var(--sx), var(--sy)) scale(0.2); opacity: 0; } }
+.zzz-hit { animation: zzz-hit 0.18s ease-out; }
+.zzz-pop { animation: zzz-pop 0.5s var(--ease-out-expo) forwards; }
+.zzz-shard { animation: zzz-shard 0.65s ease-out forwards; }
