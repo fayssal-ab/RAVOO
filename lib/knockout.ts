@@ -19,8 +19,9 @@ import { AppError, lockApp, withTx } from "./tx";
 // - battles: one live at a time; each side's bonus cost + payout is entered and
 //   the higher multiplier wins (exact tie = replay). The loser is out, the
 //   winner moves to the fixed next match;
-// - the last round holds the Grand Final (match 0) and the 3rd-place match
-//   (match 1) between the semi-final losers;
+// - the last round is the Grand Final; only the champion is crowned (no 2nd /
+//   3rd place). Tournaments created before that also hold a 3rd-place match
+//   (last round, match 1), which still plays out;
 // - fewer players than seats: once registration is closed and nobody is left
 //   to roll, empty first-round seats become void and lone players get byes.
 
@@ -30,7 +31,7 @@ export type KoSize = (typeof SIZES)[number];
 /** Number of rounds for a bracket size (4 → 2, 8 → 3, 16 → 4, 32 → 5). */
 export const roundsFor = (size: number) => Math.round(Math.log2(size));
 /** Matches in a round: halves each round; the last round = final + 3rd place. */
-export const matchesIn = (size: number, round: number) => (round >= roundsFor(size) ? 2 : size / 2 ** round);
+export const matchesIn = (size: number, round: number) => size / 2 ** round;
 
 export function roundName(size: number, round: number): string {
   const fromEnd = roundsFor(size) - round;
@@ -550,8 +551,10 @@ async function finishMatch(conn: PoolConnection, t: KoTournament, m: RowDataPack
   const winner = Number(side === 1 ? m.p1_id : m.p2_id);
   const loser = Number(side === 1 ? m.p2_id : m.p1_id);
   await conn.query("UPDATE ko_matches SET status = 'done', winner_id = ?, finished_at = UTC_TIMESTAMP() WHERE id = ?", [winner, m.id]);
-  // semi-final losers aren't out yet: they play the 3rd-place match
-  if (Number(m.round) !== roundsFor(t.max_players) - 1) await conn.query("UPDATE ko_participants SET state = 'eliminated' WHERE id = ?", [loser]);
+  // semi-final losers of older tournaments aren't out yet: they play the 3rd-place match
+  const last = roundsFor(t.max_players);
+  const [bronze] = await conn.query<RowDataPacket[]>("SELECT 1 FROM ko_matches WHERE tournament_id = ? AND round = ? AND match_index = 1", [t.id, last]);
+  if (Number(m.round) !== last - 1 || !bronze[0]) await conn.query("UPDATE ko_participants SET state = 'eliminated' WHERE id = ?", [loser]);
   await conn.query("UPDATE ko_tournaments SET focus_match_id = ? WHERE id = ?", [m.id, t.id]);
   const champion = await propagate(conn, t.id);
   return { winnerId: winner, champion: champion === winner };

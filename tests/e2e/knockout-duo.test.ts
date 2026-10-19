@@ -77,9 +77,8 @@ test("duo: odd count refused, random teams, 2v2 totals, team DQ, finish", async 
   assert.equal(doneB.p1_multi, "3.00");
   assert.equal(doneB.p2_multi, "10.00");
 
-  // bronze: the DQ'd team is out → bye; final played
-  const bronze = s.matches.find((m) => m.round === 2 && m.match_index === 1)!;
-  assert.equal(bronze.status, "bye");
+  // champion only: no 3rd-place match; final played
+  assert.equal(s.matches.find((m) => m.round === 2 && m.match_index === 1), undefined);
   await startBattle(id);
   const fin = (await state(id)).live!;
   await recordBattleResult(id, fin.id, b("100", "500"), b("100", "100"), { p1b: b("100", "500"), p2b: b("100", "100") });

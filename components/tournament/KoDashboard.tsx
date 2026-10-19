@@ -80,7 +80,7 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
           className="panel space-y-5 p-6"
           onSubmit={(e) => {
             e.preventDefault();
-            act("create", { title: form.title, prize: form.prize, size: form.size, duo: form.duo, prizes: [form.p1 || null, form.p2 || null, form.p3 || null] });
+            act("create", { title: form.title, prize: form.prize, size: form.size, duo: form.duo, prizes: [form.p1 || null, null, null] });
           }}
         >
           <p className="font-display text-3xl"><span className="chrome">New</span> <span className="neon-text">tournament</span></p>
@@ -115,13 +115,9 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
               ))}
             </div>
           </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {(["p1", "p2", "p3"] as const).map((k, i) => (
-              <label key={k} className="block"><span className="label">{["1st", "2nd", "3rd"][i]} place prize ($)</span>
-                <input inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" value={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })} placeholder={["300", "150", "50"][i]} className="field font-mono" />
-              </label>
-            ))}
-          </div>
+          <label className="block max-w-xs"><span className="label">Champion prize ($)</span>
+            <input inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" value={form.p1} onChange={(e) => setForm({ ...form, p1: e.target.value })} placeholder="300" className="field font-mono" />
+          </label>
           <button disabled={busy !== null} className="btn btn-neon">Create {form.duo ? `${form.size}-team duo (${form.size * 2} players)` : `${form.size}-player`} tournament</button>
           {msg && <p role="alert" className="text-sm text-danger">{msg}</p>}
         </form>
@@ -295,7 +291,8 @@ function BattleResultForm({ match, duo, busy, onSubmit }: {
   match: KoMatch; duo: boolean; busy: boolean;
   onSubmit: (r: { p1: Bonus; p2: Bonus; p1b?: Bonus; p2b?: Bonus }) => void;
 }) {
-  const empty = { cost: "", payout: "" };
+  // default bonus cost is $100 (the usual stake); payouts start empty
+  const empty = { cost: "100", payout: "" };
   const [b, setB] = useState<Record<"p1" | "p1b" | "p2" | "p2b", Bonus>>({ p1: empty, p1b: empty, p2: empty, p2b: empty });
   const set = (k: keyof typeof b) => (v: Bonus) => setB((x) => ({ ...x, [k]: v }));
   const total = (a: Bonus, c: Bonus) => {

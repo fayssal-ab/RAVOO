@@ -7,7 +7,7 @@ import { Chip, Club, Paw, Spade } from "@/components/decor/shapes";
 // Hero slot machine: four chrome-framed reels. Each reel rests on its letter
 // (so the headline always reads RAVO: before the spin, without JS, with
 // reduced motion), spins through the symbols once when the site is ready and
-// locks back on R · A · V · O one by one, then a light sweeps the payline.
+// locks back on R · A · V · O one by one, then a light sweeps the reels.
 
 const SYMBOLS = ["paw", "chip", "spade", "7", "club", "$"] as const;
 type Sym = (typeof SYMBOLS)[number];
@@ -77,9 +77,6 @@ export function SlotReels({ start }: { start: boolean }) {
           </div>
         </div>
       ))}
-
-      {/* payline */}
-      <div className={`pointer-events-none absolute inset-x-[-0.2em] top-1/2 h-[0.02em] -translate-y-1/2 bg-neon transition-opacity duration-500 ${all ? "opacity-70 shadow-[0_0_0.2em_var(--color-neon)]" : "opacity-0"}`} />
 
       {/* lever: chrome housing on the side, thick arm, glowing ball; pulled when the reels start */}
       <div className="absolute -right-[0.5em] top-[0.05em] h-[1.05em] w-[0.4em]" aria-hidden>

@@ -285,7 +285,7 @@ export function Bracket({ state }: { state: KoState }) {
             </div>
           ))}
           <div className="flex flex-col">
-            <p className="mb-3 text-center font-head text-xs font-bold uppercase tracking-[0.18em] text-muted">Podium</p>
+            <p className="mb-3 text-center font-head text-xs font-bold uppercase tracking-[0.18em] text-muted">Champion</p>
             <div className="flex flex-1 items-center"><Podium state={state} compact /></div>
           </div>
         </div>
@@ -328,43 +328,25 @@ export function ChampionCard({ p, compact = false, celebrate = false }: { p: KoP
   );
 }
 
-const PLACE = ["1st", "2nd", "3rd"];
-
-/** 1st / 2nd / 3rd with prizes. */
+/** The champion and their prize (only 1st place is awarded). */
 export function Podium({ state, compact = false }: { state: KoState; compact?: boolean }) {
   const t = state.tournament;
-  const places: [KoParticipant | null, string | null][] = [[state.champion, t.prize_1], [state.runnerUp, t.prize_2], [state.third, t.prize_3]];
+  const p = state.champion;
+  const amount = t.prize_1;
   if (compact) {
     return (
-      <ol className="w-full space-y-2">
-        {places.map(([p, amount], i) => (
-          <li key={i} className={`flex items-center gap-2 rounded-lg border p-2 ${i === 0 ? "border-gold/50 bg-gold/10" : "border-line bg-surface"}`}>
-            <span className="w-7 font-mono text-[11px] font-bold text-dim">{PLACE[i]}</span>
-            {p && <SlotArt name={p.slot_name} src={p.slot_image} size={28} rounded="rounded-md" />}
-            <span className={`min-w-0 flex-1 truncate text-xs ${i === 0 ? "font-bold text-gold" : "text-muted"}`}>{p ? teamName(p) : "—"}</span>
-            {amount != null && <span className="font-mono text-[11px] text-dim">${Number(amount).toLocaleString("en-US")}</span>}
-          </li>
-        ))}
-      </ol>
+      <div className="flex w-full items-center gap-2 rounded-lg border border-gold/50 bg-gold/10 p-2">
+        <Crown className="size-4 shrink-0 text-gold" />
+        {p && <SlotArt name={p.slot_name} src={p.slot_image} size={28} rounded="rounded-md" />}
+        <span className="min-w-0 flex-1 truncate text-xs font-bold text-gold">{p ? teamName(p) : "To be crowned"}</span>
+        {amount != null && <span className="font-mono text-[11px] text-dim">${Number(amount).toLocaleString("en-US")}</span>}
+      </div>
     );
   }
-  const side = ([p, amount]: [KoParticipant | null, string | null], place: 2 | 3) => (
-    <div className={`flex flex-col items-center gap-2 rounded-2xl border border-line bg-surface p-4 text-center ${place === 2 ? "ko-slide-l" : "ko-slide-r"}`}>
-      <span className="font-display text-4xl" style={{ color: place === 2 ? "var(--color-silver)" : "var(--color-bronze)" }}>{place}</span>
-      {p ? <SlotArt name={p.slot_name} src={p.slot_image} size={96} /> : <span className="grid size-24 place-items-center rounded-xl border border-dashed border-line text-dim">—</span>}
-      <p className="max-w-[18ch] truncate font-head text-xl font-bold">{p ? teamName(p) : "—"}</p>
-      {p && <p className="max-w-[18ch] truncate text-sm text-neon">{p.slot_name}</p>}
-      <p className="text-xs uppercase tracking-widest text-dim">{PLACE[place - 1]} place{amount != null ? ` · $${Number(amount).toLocaleString("en-US")}` : ""}</p>
-    </div>
-  );
   return (
-    <div className="grid items-end gap-4 md:grid-cols-[1fr_1.3fr_1fr]">
-      <div className="order-2 md:order-1">{side(places[1], 2)}</div>
-      <div className="order-1 md:order-2">
-        <ChampionCard p={places[0][0]} celebrate />
-        {places[0][1] != null && <p className="mt-2 text-center font-mono text-lg text-gold">${Number(places[0][1]).toLocaleString("en-US")}</p>}
-      </div>
-      <div className="order-3">{side(places[2], 3)}</div>
+    <div className="mx-auto max-w-md">
+      <ChampionCard p={p} celebrate />
+      {amount != null && <p className="mt-2 text-center font-mono text-lg text-gold">${Number(amount).toLocaleString("en-US")}</p>}
     </div>
   );
 }

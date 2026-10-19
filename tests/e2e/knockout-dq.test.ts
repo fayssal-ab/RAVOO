@@ -17,7 +17,7 @@ const byName = async (id: number, u: string) => (await state(id)).participants.f
 
 import { after } from "node:test";
 after(() => getPool().end());
-test("disqualify: waiting player, in-bracket forfeit, semi-final loser skips bronze", async () => {
+test("disqualify: waiting player, in-bracket forfeit, champion only", async () => {
   await getPool().query("UPDATE ko_tournaments SET status = 'cancelled' WHERE status IN ('open','closed')");
   const id = await createKo({ title: "DQ test", prize: "", size: 4 });
   await openRegistration(id);
@@ -56,17 +56,17 @@ test("disqualify: waiting player, in-bracket forfeit, semi-final loser skips bro
   await recordBattleResult(id, live.id, { cost: "100", payout: "500" }, { cost: "100", payout: "200" });
   s = await state(id);
   const final = s.matches.find((m) => m.round === 2 && m.match_index === 0)!;
-  const bronze = s.matches.find((m) => m.round === 2 && m.match_index === 1)!;
+  const bronze = s.matches.find((m) => m.round === 2 && m.match_index === 1);
   assert.equal(final.status, "ready");
-  // bronze: DQ'd semi loser is out → the other semi loser gets a bye
-  assert.equal(bronze.status, "bye");
-  assert.notEqual(bronze.winner_id, victim.id);
+  // champion only: no 3rd-place match, both semi losers are out
+  assert.equal(bronze, undefined);
+  s = await state(id);
+  assert.equal(s.participants.filter((p) => p.state === "eliminated").length, 3); // DQ'd + 2 semi losers
   // finish the final
   await startBattle(id);
   const f = (await state(id)).live!;
   await recordBattleResult(id, f.id, { cost: "100", payout: "300" }, { cost: "100", payout: "100" });
   const t = await getKoById(id);
   assert.equal(t!.status, "finished");
-  assert.notEqual(Number(t!.third_id), victim.id);
   await resetKo(id).catch(() => {});
 });
