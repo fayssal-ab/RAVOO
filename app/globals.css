@@ -363,21 +363,6 @@ iframe[src*=".netlify/scripts/hud"],
 .zzz-pop { animation: zzz-pop 0.5s var(--ease-out-expo) forwards; }
 .zzz-shard { animation: zzz-shard 0.65s ease-out forwards; }
 
-/* insomnia easter egg (components/fx/Insomnia.tsx) */
-.zzz-rise { animation: zzz-rise 7s ease-in infinite; opacity: 0; text-shadow: 0 0 14px rgb(141 255 74 / 0.6); }
-@keyframes zzz-rise {
-  0% { transform: translateY(0) rotate(-10deg); opacity: 0; }
-  15% { opacity: 0.9; }
-  100% { transform: translateY(-115vh) rotate(18deg) translateX(40px); opacity: 0; }
-}
-.jolt { animation: jolt 0.45s cubic-bezier(.36,.07,.19,.97) both; }
-@keyframes jolt {
-  10%, 90% { transform: translate3d(-2px, 1px, 0); }
-  20%, 80% { transform: translate3d(4px, -2px, 0); }
-  30%, 50%, 70% { transform: translate3d(-6px, 2px, 0); }
-  40%, 60% { transform: translate3d(6px, -1px, 0); }
-}
-
 /* slot-reel digits (components/fx/ReelNumber.tsx) */
 .reel-digit { display: inline-block; height: 1em; overflow: hidden; vertical-align: top; line-height: 1; }
 .reel-digit > span { display: flex; flex-direction: column; }

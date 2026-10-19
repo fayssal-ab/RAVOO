@@ -1,6 +1,5 @@
 import { FloatingDecor } from "@/components/decor/FloatingDecor";
 import { ZzzGame } from "@/components/game/ZzzGame";
-import { Insomnia } from "@/components/fx/Insomnia";
 import { Backdrop } from "@/components/shell/Backdrop";
 import { CookieBanner } from "@/components/shell/CookieBanner";
 import { Footer } from "@/components/shell/Footer";
@@ -25,7 +24,6 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <Footer />
       </div>
       <ZzzGame />
-      <Insomnia />
       <CookieBanner />
     </>
   );
