@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Coins, Flag, Gift, Timer } from "lucide-react";
+import { ArrowRight, Coins, Gift, Timer } from "lucide-react";
 import { Hero } from "@/components/home/Hero";
 import { StreamBox } from "@/components/stream/StreamBox";
 import { Ticker } from "@/components/home/Ticker";
@@ -101,9 +101,9 @@ export default async function HomePage() {
                   const r = top[i];
                   return (
                     <div key={i} className="rounded-2xl border border-white/10 bg-black/35 p-4 text-center backdrop-blur transition hover:-translate-y-1">
-                      <div className="relative mx-auto grid size-14 place-items-center rounded-full border-2 bg-bg font-display text-2xl" style={{ borderColor: MEDAL[i], color: MEDAL[i] }}>
-                        {r ? r.name.slice(0, 1).toUpperCase() : "?"}
-                        <span className="absolute -bottom-2 left-1/2 grid size-6 -translate-x-1/2 place-items-center rounded-full font-mono text-xs font-bold text-bg" style={{ background: MEDAL[i] }}>{i + 1}</span>
+                      <div className="relative mx-auto size-20 rounded-full border-2 bg-black sm:size-24" style={{ borderColor: MEDAL[i], boxShadow: `0 0 22px -4px ${MEDAL[i]}` }}>
+                        <Image src={`/media/podium/${i + 1}.webp`} alt={["King", "Prince", "Aristocrat"][i]} fill sizes="96px" className="rounded-full object-cover brightness-125" />
+                        <span className="absolute -bottom-2 left-1/2 z-10 grid size-6 -translate-x-1/2 place-items-center rounded-full font-mono text-xs font-bold text-bg" style={{ background: MEDAL[i] }}>{i + 1}</span>
                       </div>
                       <p className="mt-4 truncate font-head text-sm font-bold">{r ? r.name : "Open seat"}</p>
                       <p className="font-mono text-xs text-text/60">{r ? formatMoney(r.wagered) : "$0.00"}</p>
@@ -135,12 +135,17 @@ export default async function HomePage() {
         <section className="mx-auto mt-24 max-w-6xl px-4 sm:px-6">
           <SectionTitle eyebrow="Wager milestones" title="Hit the number." accent="Get paid." right={<Link href="/milestones" className="btn btn-ghost btn-sm">All milestones <ArrowRight className="size-4" /></Link>} />
           <Stagger className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {milestones.slice(0, 4).map((m) => (
-              <SpotlightCard key={m.id} className="panel neon-frame h-full p-5">
-                <Flag className="size-5 text-neon" />
-                <p className="mt-3 font-head text-lg font-bold">{m.name}</p>
+            {milestones.slice(0, 4).map((m, i) => (
+              <SpotlightCard key={m.id} className="panel neon-frame group h-full overflow-hidden">
+                <div className="relative h-28 overflow-hidden bg-black">
+                  <Image src={i === 3 ? "/media/store/vault.webp" : "/media/store/cash.webp"} alt="" fill sizes="(min-width: 768px) 25vw, 50vw" className="object-cover transition duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-surface to-transparent" />
+                </div>
+                <div className="p-5 pt-3">
+                <p className="font-head text-lg font-bold">{m.name}</p>
                 <p className="font-mono text-sm text-muted">{formatMoney(m.min_wager, { cents: false })} wagered</p>
                 <p className="mt-3 inline-block rounded-full bg-neon px-3 py-1 font-mono text-sm font-bold text-neon-ink">{formatMoney(m.reward, { cents: false })} cash</p>
+                </div>
               </SpotlightCard>
             ))}
           </Stagger>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Check, Clock, Lock, ShieldAlert } from "lucide-react";
 import { SignInButtons } from "@/components/account/SignInPanel";
@@ -82,7 +83,12 @@ export default async function MilestonesPage({ searchParams }: { searchParams: P
               const color = tint(i, milestones.length);
               return (
                 <div key={m.id} className={`panel grid grid-cols-2 items-center gap-3 px-5 py-4 transition hover:border-line-hot sm:grid-cols-[1.2fr_1fr_1fr_9rem] sm:px-6 ${reached && !claim ? "neon-frame is-on" : ""}`}>
-                  <p className="font-head text-lg font-bold" style={{ color }}>{m.name}</p>
+                  <p className="flex items-center gap-3 font-head text-lg font-bold" style={{ color }}>
+                    <span className="relative size-11 shrink-0 overflow-hidden rounded-xl border bg-black" style={{ borderColor: color }}>
+                      <Image src={i === milestones.length - 1 ? "/media/store/vault.webp" : "/media/store/cash.webp"} alt="" fill sizes="44px" className={`object-cover ${reached ? "" : "opacity-60 grayscale"}`} />
+                    </span>
+                    {m.name}
+                  </p>
                   <p className="text-right font-mono font-bold">{formatMoney(m.min_wager, { cents: false })}</p>
                   <p className="sm:text-right"><span className="rounded-full bg-neon px-3 py-1 font-mono text-sm font-bold text-neon-ink">{formatMoney(m.reward)} cash</span></p>
                   <div className="flex justify-end">

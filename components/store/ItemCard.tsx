@@ -1,4 +1,4 @@
-import { Coins, Gift, Lock, Package, Shirt, Wallet } from "lucide-react";
+import { Coins, Lock } from "lucide-react";
 import type { ReactNode } from "react";
 import { SpotlightCard } from "@/components/ui/motion";
 import { RankBadge } from "@/components/ui/RankBadge";
@@ -15,25 +15,31 @@ export interface ItemView {
   stock: number | null;
 }
 
-const ICON = { cash: Wallet, bonus: Gift, merch: Shirt, other: Package };
+/** Store art by item type; the top reward (rank 40) gets the vault. */
+function artFor(item: ItemView): string {
+  if (item.min_rank >= 40) return "/media/store/vault.webp";
+  if (item.kind === "bonus") return "/media/store/bonus.webp";
+  if (item.kind === "merch") return "/media/store/merch.webp";
+  return "/media/store/cash.webp";
+}
 
 /** Store item card. `locked` greys it out behind the rank requirement. */
 export function ItemCard({ item, locked, action }: { item: ItemView; locked: boolean; action?: ReactNode }) {
   const tier = tierFor(item.min_rank);
-  const Icon = ICON[item.kind];
   return (
     <SpotlightCard className={`panel neon-frame group flex h-full flex-col overflow-hidden ${locked ? "" : "hover:border-line-hot"}`}>
-      {/* art strip in the tier colour */}
-      <div className="relative h-36 overflow-hidden border-b border-line" style={{ background: `radial-gradient(circle at 50% 120%, ${tier.glow}, transparent 70%)` }}>
-        <div className="pixel-grid opacity-60" />
-        <div className="absolute inset-0 grid place-items-center">
-          <div
-            className={`grid size-20 place-items-center rounded-2xl border transition duration-500 group-hover:scale-110 group-hover:rotate-6 ${locked ? "opacity-40 grayscale" : ""}`}
-            style={{ borderColor: tier.color, color: tier.color, boxShadow: `0 0 34px ${tier.glow}, inset 0 0 18px ${tier.glow}` }}
-          >
-            <Icon className="size-9" />
-          </div>
-        </div>
+      {/* product art, tinted toward the tier colour */}
+      <div className="relative h-40 overflow-hidden border-b border-line bg-black">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={artFor(item)}
+          alt=""
+          loading="lazy"
+          draggable={false}
+          className={`size-full object-cover transition duration-700 group-hover:scale-110 ${locked ? "opacity-50 grayscale" : ""}`}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-1/2 mix-blend-color opacity-50" style={{ background: `linear-gradient(0deg, ${tier.color}, transparent)` }} />
         <div className="absolute left-3 top-3"><RankBadge level={item.min_rank} compact /></div>
         {item.stock != null && (
           <span className="chip absolute right-3 top-3 !py-0.5 text-[0.7rem]">{item.stock > 0 ? `${item.stock} left` : "Sold out"}</span>

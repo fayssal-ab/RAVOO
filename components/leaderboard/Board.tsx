@@ -13,6 +13,8 @@ const PODIUM = [
   { place: 3, color: "var(--color-bronze)", delay: 0.3, glow: "rgb(224 154 92 / 0.3)", lift: "sm:mt-10" },
 ];
 
+const PODIUM_ALT: Record<number, string> = { 1: "King", 2: "Prince", 3: "Aristocrat" };
+
 const money = (n: number) => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /** Top-3 cards, #1 raised in the middle. Missing places render as an open seat. */
@@ -40,10 +42,11 @@ export function Podium({ rows, prizes }: { rows: BoardRowView[]; prizes: Record<
             )}
             <div className="relative">
               <div
-                className="grid size-14 place-items-center rounded-full border-[3px] bg-bg font-display text-3xl sm:size-24 sm:text-5xl"
-                style={{ borderColor: slot.color, color: slot.color, boxShadow: `0 0 26px ${slot.glow}` }}
+                className="relative size-16 overflow-hidden rounded-full border-[3px] bg-black sm:size-28"
+                style={{ borderColor: slot.color, boxShadow: `0 0 30px ${slot.glow}` }}
               >
-                {r ? r.name.slice(0, 1).toUpperCase() : "?"}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`/media/podium/${slot.place}.webp`} alt={PODIUM_ALT[slot.place]} draggable={false} className="size-full scale-110 object-cover brightness-125" />
               </div>
               <span className="absolute -bottom-2 left-1/2 grid size-7 -translate-x-1/2 place-items-center rounded-full font-mono text-sm font-bold text-bg" style={{ background: slot.color }}>{slot.place}</span>
             </div>

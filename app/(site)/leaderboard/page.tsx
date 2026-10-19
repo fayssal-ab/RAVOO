@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { BoardExplorer, Podium } from "@/components/leaderboard/Board";
 import { EmptyState } from "@/components/ui/bits";
@@ -88,8 +89,8 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
           <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {board.previous.map((x) => (
               <div key={x.id} className="panel neon-frame flex h-full flex-col items-center p-6 text-center">
-                <div className="grid size-16 place-items-center rounded-full border-2 border-gold font-display text-3xl text-gold shadow-[0_0_24px_rgb(255_215_106/0.3)]">
-                  {x.winner ? x.winner.slice(0, 1).toUpperCase() : "?"}
+                <div className="relative size-20 overflow-hidden rounded-full border-2 border-gold bg-black shadow-[0_0_24px_rgb(255_215_106/0.3)]">
+                  <Image src="/media/podium/1.webp" alt="King" fill sizes="80px" className="object-cover" />
                 </div>
                 <p className="mt-2 text-[0.65rem] uppercase tracking-[0.2em] text-dim">Winner</p>
                 <p className="font-head font-bold">{x.winner ?? "No entries"}</p>

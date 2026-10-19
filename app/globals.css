@@ -337,3 +337,14 @@ img, svg, video, canvas, picture {
   -webkit-user-drag: none;
   -webkit-touch-callout: none;
 }
+
+/* Hide Netlify's "Powered by Netlify" badge (client-side fallback; the
+   supported switch is the site's dashboard setting). */
+#nl-badge-frame,
+iframe[src*=".netlify/scripts/hud"],
+[id^="nl-badge"],
+[class*="nf-badge"] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

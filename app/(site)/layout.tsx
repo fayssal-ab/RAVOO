@@ -2,6 +2,7 @@ import { FloatingDecor } from "@/components/decor/FloatingDecor";
 import { Backdrop } from "@/components/shell/Backdrop";
 import { CookieBanner } from "@/components/shell/CookieBanner";
 import { Footer } from "@/components/shell/Footer";
+import { Preloader } from "@/components/shell/Preloader";
 import { TopBar } from "@/components/shell/TopBar";
 import { getViewer } from "@/lib/account";
 import { getLiveStatus } from "@/lib/stream";
@@ -10,6 +11,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const [viewer, live] = await Promise.all([getViewer(), getLiveStatus()]);
   return (
     <>
+      <Preloader />
       <Backdrop />
       <TopBar
         live={live.live}
