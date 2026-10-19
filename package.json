@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "migrate": "node --env-file-if-exists=.env.local --import tsx scripts/migrate.ts",
-    "seed": "node --env-file-if-exists=.env.local --import tsx scripts/seed.ts"
+    "seed": "node --env-file-if-exists=.env.local --import tsx scripts/seed.ts",
+    "sync:slots": "node --env-file-if-exists=.env.local --import tsx scripts/sync-slots.ts"
   },
   "dependencies": {
     "decimal.js": "^10.4.3",

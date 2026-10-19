@@ -33,6 +33,7 @@ export const NAV: NavItem[] = [
     children: [
       { href: "/stream", label: "Watch live", hint: "Kick stream & schedule" },
       { href: "/bonus-hunts", label: "Bonus hunts", hint: "Live hunt tracker" },
+      { href: "/tournaments", label: "Tournaments", hint: "1v1 slot battles from chat" },
       { href: "/raffles", label: "Raffles", hint: "Spend points on tickets" },
     ],
   },
@@ -46,6 +47,7 @@ export const NAV_FLAT = [
   { href: "/milestones", label: "Milestones" },
   { href: "/stream", label: "Stream" },
   { href: "/bonus-hunts", label: "Bonus hunts" },
+  { href: "/tournaments", label: "Tournaments" },
   { href: "/raffles", label: "Raffles" },
   { href: "/store", label: "Store" },
   { href: "/ranks", label: "Ranks" },

@@ -2,7 +2,10 @@ import "server-only";
 import { randomInt } from "node:crypto";
 import type { PoolConnection, RowDataPacket } from "mysql2/promise";
 import { getPool } from "./db";
+import { normalizeName, parseFeed, type Feed } from "./slotFeed";
 import { AppError, lockApp, withTx } from "./tx";
+
+export { normalizeName };
 
 // Slot catalogue (ported from ONO): every slot with its name, provider, art
 // and popularity rank (0 = most played), synced from a JSON feed
@@ -18,19 +21,6 @@ export const POOL_TOP = 1000;
 export interface CatalogSlot { id: string; name: string; provider: string; imageUrl: string | null }
 export interface AssignedSlot { id: string; name: string; provider: string; imageUrl: string }
 export interface ChosenSlot extends AssignedSlot { matched: boolean }
-
-/** Lowercase, strip marks/symbols (®, ™, accents), collapse whitespace. */
-export function normalizeName(name: string): string {
-  return name
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[®™©]/g, "")
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim()
-    .replace(/\s+/g, " ");
-}
 
 function trigrams(s: string): Set<string> {
   const p = `  ${s} `;
@@ -57,34 +47,6 @@ export function scoreName(query: string, name: string): number {
 }
 
 // ── feed ──
-
-interface Feed { generated?: string; image_base?: string; providers?: string[]; slots?: unknown[][] }
-interface FeedRow { id: string; slug: string; name: string; provider: string; imageUrl: string | null; popularity: number | null }
-
-/** Feed rows: [position, name, providerIdx, slug, image, rtp, bonus_buy, exclusive, max_win, volatility, popularity]. */
-export function parseFeed(feed: Feed): FeedRow[] {
-  const base = typeof feed.image_base === "string" && /^https:\/\/[a-z0-9.-]+\//i.test(feed.image_base) ? feed.image_base : "https://mediumrare.imgix.net/";
-  const providers = Array.isArray(feed.providers) ? feed.providers : [];
-  const seen = new Set<string>();
-  const out: FeedRow[] = [];
-  for (const s of feed.slots ?? []) {
-    if (!Array.isArray(s)) continue;
-    const name = typeof s[1] === "string" ? s[1].trim().slice(0, 191) : "";
-    const slug = typeof s[3] === "string" ? s[3].trim().slice(0, 150) : "";
-    if (!name || !slug || seen.has(slug)) continue;
-    seen.add(slug);
-    const image = typeof s[4] === "string" && /^[a-z0-9]{16,128}$/i.test(s[4]) ? s[4] : null;
-    out.push({
-      id: `slot/${slug}`,
-      slug,
-      name,
-      provider: typeof s[2] === "number" && typeof providers[s[2]] === "string" ? providers[s[2]].slice(0, 120) : "",
-      imageUrl: image ? `${base}${image}?w=280&h=367&fit=min&auto=format` : null,
-      popularity: typeof s[10] === "number" && Number.isFinite(s[10]) ? Math.trunc(s[10]) : null,
-    });
-  }
-  return out;
-}
 
 export async function syncCatalog(): Promise<{ total: number; withArt: number; generated: string | null }> {
   const res = await fetch(FEED_URL, { cache: "no-store", headers: { Accept: "application/json" }, signal: AbortSignal.timeout(25_000) });
@@ -209,4 +171,44 @@ export async function findSlotByName(raw: string): Promise<ChosenSlot | null> {
   const best = near[0]?.r;
   if (!best) return { id: `typed/${q.replace(/ /g, "-")}`.slice(0, 191), name: typed, provider: "", imageUrl: "", matched: false };
   return { id: best.id, name: best.name, provider: best.provider, imageUrl: best.image ?? "", matched: true };
+}
+
+/**
+ * Bonuses and tournament players saved by typed name (not in the catalogue
+ * at the time) get the catalogue name, provider and art once a slot with
+ * exactly that name exists (most played wins on duplicates).
+ */
+export async function upgradeTypedSlots(): Promise<number> {
+  const rows = await loadCache();
+  const byName = new Map<string, CacheRow>();
+  for (const r of [...rows].sort((a, b) => a.popularity - b.popularity)) if (r.image && !byName.has(r.norm)) byName.set(r.norm, r);
+  const pool = getPool();
+  let n = 0;
+  const [bonuses] = await pool.query<RowDataPacket[]>("SELECT id, slot FROM hunt_bonuses WHERE image_url IS NULL OR image_url = ''");
+  for (const b of bonuses) {
+    const r = byName.get(normalizeName(String(b.slot)));
+    if (!r) continue;
+    await pool.query("UPDATE hunt_bonuses SET slot_id = ?, slot = ?, provider = ?, image_url = ? WHERE id = ?", [r.id, r.name, r.provider, r.image, b.id]);
+    n++;
+  }
+  const [players] = await pool.query<RowDataPacket[]>("SELECT id, slot_name FROM ko_participants WHERE slot_image = ''");
+  for (const p of players) {
+    const r = byName.get(normalizeName(String(p.slot_name)));
+    if (!r) continue;
+    await pool.query("UPDATE ko_participants SET slot_id = ?, slot_name = ?, slot_provider = ?, slot_image = ? WHERE id = ?", [r.id, r.name, r.provider, r.image, p.id]);
+    n++;
+  }
+  return n;
+}
+
+/** Sync when the catalogue is empty or older than a day; never throws. */
+export async function ensureCatalog(): Promise<void> {
+  try {
+    if (await catalogIsStale()) {
+      await syncCatalog();
+      await upgradeTypedSlots();
+    }
+  } catch (err) {
+    console.error("slot catalogue sync failed", err instanceof Error ? err.message : "unknown");
+  }
 }

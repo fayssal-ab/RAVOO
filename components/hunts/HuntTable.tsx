@@ -3,6 +3,7 @@
 import { Search } from "lucide-react";
 import { useState } from "react";
 import type { Bonus } from "@/lib/hunts";
+import { SlotArt } from "@/components/ui/SlotArt";
 
 const money = (v: string) => "$" + Number(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -31,12 +32,15 @@ export function HuntTable({ bonuses }: { bonuses: Bonus[] }) {
             {list.map((b) => (
               <li key={b.id} className={`panel grid grid-cols-[2rem_1fr_5.5rem_4rem] items-center sm:grid-cols-[2.5rem_1fr_5rem_6rem_4.5rem] gap-3 px-5 py-3.5 transition hover:border-line-hot ${b.win == null ? "opacity-70" : ""}`}>
                 <span className="font-mono font-bold text-dim">{bonuses.indexOf(b) + 1}</span>
-                <span className="min-w-0">
+                <span className="flex min-w-0 items-center gap-3">
+                  <SlotArt name={b.slot} src={b.image_url} size={44} rounded="rounded-lg" />
+                  <span className="min-w-0">
                   <span className="flex items-center gap-2 truncate font-head font-bold">
                     {b.slot}
                     {top?.id === b.id && <span className="rounded-full bg-gold px-2 py-0.5 font-head text-[0.6rem] font-bold uppercase text-bg">Top</span>}
                   </span>
                   <span className="block truncate text-xs text-dim">{b.provider}{b.called_by && ` · called by ${b.called_by}`}</span>
+                  </span>
                 </span>
                 <span className="hidden text-right font-mono text-sm sm:block">{money(b.bet)}</span>
                 <span className="text-right font-mono text-sm font-bold text-neon">{b.win != null ? money(b.win) : "—"}</span>

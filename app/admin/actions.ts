@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { adminAction } from "@/lib/admin";
 import { addBonus, createHunt, deleteBonus, deleteHunt, finishHunt, moveBonus, reopenHunt, setBonusWin, updateHunt } from "@/lib/hunts";
-import { syncCatalog } from "@/lib/slots";
+import { syncCatalog, upgradeTypedSlots } from "@/lib/slots";
 import { deleteClaim, resolveClaim, saveMilestones } from "@/lib/milestones";
 import { addSlot, deleteSlot } from "@/lib/stream";
 import { deletePeriod, removeEntry, savePeriod, upsertEntries } from "@/lib/leaderboard";
@@ -252,7 +252,7 @@ export async function bonusOpAction(form: FormData) {
 
 // ── slot catalogue ─────────────────────────────────────────────────────
 export async function syncSlotsAction() {
-  await adminAction({ path: "/admin/slots", audit: "slots.sync" }, () => syncCatalog());
+  await adminAction({ path: "/admin/slots", audit: "slots.sync" }, async () => ({ ...(await syncCatalog()), upgraded: await upgradeTypedSlots() }));
 }
 
 // ── stream schedule ────────────────────────────────────────────────────

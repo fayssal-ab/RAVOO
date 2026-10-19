@@ -8,10 +8,10 @@ const csp = [
   // for the App Router runtime. No external script origins are allowed.
   "script-src 'self' 'unsafe-inline'" + (process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""),
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://files.kick.com https://*.kick.com https://cdn.discordapp.com",
+  "img-src 'self' data: blob: https://files.kick.com https://*.kick.com https://cdn.discordapp.com https://mediumrare.imgix.net",
   "font-src 'self' data:",
   "frame-src https://player.kick.com https://kick.com",
-  "connect-src 'self'",
+  "connect-src 'self' wss://ws-us2.pusher.com wss://*.pusher.com",
   "media-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",

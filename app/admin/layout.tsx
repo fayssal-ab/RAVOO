@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { LogoutButton } from "@/components/account/LogoutButton";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { ConfirmHost } from "@/components/ui/confirm";
 import { requireAdmin } from "@/lib/admin";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false } };
@@ -23,6 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="hidden p-4 lg:absolute lg:bottom-0 lg:block"><LogoutButton endpoint="/api/auth/logout" to="/login" /></div>
       </aside>
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-8">{children}</main>
+      <ConfirmHost />
     </div>
   );
 }

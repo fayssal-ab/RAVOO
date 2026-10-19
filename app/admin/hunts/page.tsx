@@ -7,12 +7,14 @@ import { ConfirmButton } from "@/components/ui/ConfirmButton";
 import { SlotArt } from "@/components/ui/SlotArt";
 import { getHunt, listHunts } from "@/lib/hunts";
 import { formatMoney } from "@/lib/money";
+import { ensureCatalog } from "@/lib/slots";
 import { addBonusAction, bonusOpAction, createHuntAction, huntStatusAction, updateHuntAction } from "../actions";
 
 const STATUS = { collecting: "Collecting", opening: "Opening", finished: "Finished" } as const;
 
 export default async function AdminHunts({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
+  await ensureCatalog();
   const [hunts, hunt] = await Promise.all([listHunts(), getHunt(sp.h && /^\d+$/.test(sp.h) ? Number(sp.h) : undefined)]);
   const running = hunts.find((h) => h.status !== "finished");
   const editable = hunt?.status === "collecting";
