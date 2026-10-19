@@ -5,7 +5,7 @@ import { Crown, History, ScrollText, Search } from "lucide-react";
 import { useState } from "react";
 import { CountUp } from "@/components/ui/motion";
 
-export interface BoardRowView { rank: number; name: string; wagered: number; prize: number | null }
+export interface BoardRowView { rank: number; name: string; score: number; prize: number | null }
 
 const PODIUM = [
   { place: 2, color: "var(--color-silver)", delay: 0.15, glow: "rgb(217 225 220 / 0.3)", lift: "sm:mt-10" },
@@ -15,10 +15,13 @@ const PODIUM = [
 
 const PODIUM_ALT: Record<number, string> = { 1: "King", 2: "Prince", 3: "Aristocrat" };
 
+const points = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " pts";
+
 const money = (n: number) => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /** Top-3 cards, #1 raised in the middle. Missing places render as an open seat. */
-export function Podium({ rows, prizes }: { rows: BoardRowView[]; prizes: Record<number, number> }) {
+export function Podium({ rows, prizes, scoreKind = "wagered" }: { rows: BoardRowView[]; prizes: Record<number, number>; scoreKind?: "points" | "wagered" }) {
+  const score = scoreKind === "points" ? points : money;
   return (
     <div className="mx-auto grid max-w-5xl grid-cols-3 items-start gap-2 sm:gap-5">
       {PODIUM.map((slot) => {
@@ -51,8 +54,8 @@ export function Podium({ rows, prizes }: { rows: BoardRowView[]; prizes: Record<
               <span className="absolute -bottom-2 left-1/2 grid size-7 -translate-x-1/2 place-items-center rounded-full font-mono text-sm font-bold text-bg" style={{ background: slot.color }}>{slot.place}</span>
             </div>
             <p className="mt-5 max-w-full truncate font-head text-sm font-bold sm:text-lg">{r ? r.name : "Open seat"}</p>
-            <p className="mt-2 text-[0.6rem] uppercase tracking-[0.2em] text-dim">Wagered</p>
-            <p className="font-mono text-sm font-bold sm:text-xl" style={{ color: slot.color }}>{r ? money(r.wagered) : "$0.00"}</p>
+            <p className="mt-2 text-[0.6rem] uppercase tracking-[0.2em] text-dim">{scoreKind === "points" ? "Points" : "Wagered"}</p>
+            <p className="font-mono text-sm font-bold sm:text-xl" style={{ color: slot.color }}>{score(r?.score ?? 0)}</p>
             {prize != null && (
               <span className="mt-4 rounded-xl px-3 py-1.5 font-mono text-sm font-bold text-bg shadow-[0_3px_0_rgb(0_0_0/0.4)] sm:px-5 sm:text-lg" style={{ background: slot.color }}>
                 <CountUp value={prize} prefix="$" decimals={2} />
@@ -66,13 +69,14 @@ export function Podium({ rows, prizes }: { rows: BoardRowView[]; prizes: Record<
 }
 
 /** Ranked rows from 4th place down (or everything with `fromRank` = 1). */
-export function BoardTable({ rows, fromRank = 4 }: { rows: BoardRowView[]; fromRank?: number }) {
+export function BoardTable({ rows, fromRank = 4, scoreKind = "wagered" }: { rows: BoardRowView[]; fromRank?: number; scoreKind?: "points" | "wagered" }) {
+  const score = scoreKind === "points" ? points : money;
   const list = rows.filter((r) => r.rank >= fromRank);
   if (!list.length) return null;
   return (
     <div>
       <div className="grid grid-cols-[3rem_1fr_auto] gap-4 px-4 pb-2 font-head text-[0.7rem] font-semibold uppercase tracking-[0.15em] text-dim sm:grid-cols-[3.5rem_1fr_10rem_7rem] sm:px-5">
-        <span>Rank</span><span>Player</span><span className="text-right">Wagered</span><span className="hidden text-right sm:block">Prize</span>
+        <span>Rank</span><span>Player</span><span className="text-right">{scoreKind === "points" ? "Points" : "Wagered"}</span><span className="hidden text-right sm:block">Prize</span>
       </div>
       <ol className="space-y-2">
         {list.map((r, i) => (
@@ -90,7 +94,7 @@ export function BoardTable({ rows, fromRank = 4 }: { rows: BoardRowView[]; fromR
               <span className="truncate font-head font-semibold">{r.name}</span>
             </span>
             <span className="text-right font-mono text-sm font-bold text-neon">
-              {money(r.wagered)}
+              {score(r.score)}
               {r.prize != null && <span className="mt-1 block text-xs text-gold sm:hidden">{money(r.prize)}</span>}
             </span>
             <span className="hidden justify-end sm:flex">
@@ -104,7 +108,7 @@ export function BoardTable({ rows, fromRank = 4 }: { rows: BoardRowView[]; fromR
 }
 
 /** Table + player search + rules dialog (toolbar above the rows). */
-export function BoardExplorer({ rows, rules }: { rows: BoardRowView[]; rules: string[] }) {
+export function BoardExplorer({ rows, rules, scoreKind = "wagered" }: { rows: BoardRowView[]; rules: string[]; scoreKind?: "points" | "wagered" }) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const shown = q ? rows.filter((r) => r.name.toLowerCase().includes(q.toLowerCase())) : rows;
@@ -118,7 +122,7 @@ export function BoardExplorer({ rows, rules }: { rows: BoardRowView[]; rules: st
         <button type="button" onClick={() => setOpen(true)} className="btn btn-neon btn-sm"><ScrollText className="size-4" /> Rules</button>
         <a href="#history" className="btn btn-ghost btn-sm"><History className="size-4" /> History</a>
       </div>
-      {shown.length ? <BoardTable rows={shown} fromRank={q ? 1 : 4} /> : <p className="panel p-6 text-center text-sm text-muted">No player matches “{q}”.</p>}
+      {shown.length ? <BoardTable rows={shown} fromRank={q ? 1 : 4} scoreKind={scoreKind} /> : <p className="panel p-6 text-center text-sm text-muted">No player matches “{q}”.</p>}
       <AnimatePresence>
         {open && (
           <motion.div className="fixed inset-0 z-[100] grid place-items-center bg-black/70 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpen(false)}>

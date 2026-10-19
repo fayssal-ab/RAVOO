@@ -8,6 +8,7 @@ import { CopyCode } from "@/components/ui/CopyCode";
 import { Countdown, Reveal, Stagger } from "@/components/ui/motion";
 import { QZINO_CODE, QZINO_URL } from "@/lib/constants";
 import { getBoard } from "@/lib/leaderboard";
+import { QBOARDS_URL } from "@/lib/qboardsFeed";
 import { formatMoney } from "@/lib/money";
 
 export const metadata: Metadata = { title: "Leaderboard" };
@@ -30,7 +31,13 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   const id = p && /^\d+$/.test(p) ? Number(p) : undefined;
   const board = await getBoard(id).catch(() => null);
   const period = board?.period ?? null;
-  const rows = (board?.rows ?? []).map((r) => ({ ...r, wagered: Number(r.wagered), prize: r.prize != null ? Number(r.prize) : null }));
+  const rules = board?.source === "qboards" ? [
+    "Rankings and prizes come from the official Q-boards leaderboard.",
+    "Your rank follows the points awarded by Q-boards during the event.",
+    "Scores and prizes sync every 6 hours. Check the official board for the latest results and payout rules.",
+    "Usernames are partly hidden for privacy.",
+  ] : RULES;
+  const rows = (board?.rows ?? []).map((r) => ({ ...r, score: Number(r.wagered), prize: r.prize != null ? Number(r.prize) : null }));
   const prizes = Object.fromEntries((board?.prizes ?? []).map((x) => [x.place, Number(x.amount)]));
 
   return (
@@ -58,13 +65,20 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
             </p>
             <h1 className="mt-2 font-display text-3xl sm:text-4xl"><span className="chrome">{period.title}</span></h1>
             {period.state === "live" && <p className="eyebrow mt-3">● Live</p>}
+            {board.source === "qboards" && board.syncedAt && (
+              <p className="mt-3 text-xs text-muted">
+                Updated every 6 hours · Last sync {new Date(board.syncedAt.replace(" ", "T") + "Z").toLocaleString("en-GB", { timeZone: "UTC" })} UTC
+                {board.syncDelayed && " · Update delayed"}
+                {" · "}<a href={QBOARDS_URL} target="_blank" rel="noopener noreferrer" className="underline">Official board</a>
+              </p>
+            )}
           </header>
 
           {rows.length ? (
-            <Podium rows={rows} prizes={prizes} />
+            <Podium rows={rows} prizes={prizes} scoreKind={board.scoreKind} />
           ) : (
             <EmptyState title="Nobody on the board yet" action={<CopyCode code={QZINO_CODE} />}>
-              Wagers show up here once they&apos;re counted. Sign up with the code and start climbing.
+              Scores show up here once they&apos;re counted. Sign up with the code and start climbing.
             </EmptyState>
           )}
 
@@ -78,7 +92,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
           </Reveal>
 
           {rows.length > 0 && (
-            <div className="mt-12"><BoardExplorer rows={rows} rules={RULES} /></div>
+            <div className="mt-12"><BoardExplorer rows={rows} rules={rules} scoreKind={board.scoreKind} /></div>
           )}
         </>
       )}

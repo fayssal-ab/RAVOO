@@ -4,6 +4,7 @@ import { getPool } from "./db";
 import { maskUsername } from "./mask";
 import { sumDecimals } from "./money";
 import { AppError, withTx } from "./tx";
+import { getQboardsBoard } from "./qboards";
 
 // Wager leaderboard. There is no Qzino feed yet: an admin creates periods and
 // enters wagers (one by one or pasted as CSV). Rank is computed in SQL (a
@@ -22,7 +23,7 @@ export interface Period {
 export interface Prize { place: number; amount: string }
 export interface BoardRow { rank: number; name: string; wagered: string; prize: string | null }
 export interface PastPeriod extends Period { winner: string | null }
-export interface Board { period: Period | null; prizes: Prize[]; rows: BoardRow[]; previous: PastPeriod[] }
+export interface Board { period: Period | null; prizes: Prize[]; rows: BoardRow[]; previous: PastPeriod[]; source?: "qboards"; scoreKind?: "points" | "wagered"; syncedAt?: string; syncDelayed?: boolean }
 
 const STATE_SQL = `CASE WHEN UTC_TIMESTAMP() < starts_at THEN 'upcoming' WHEN UTC_TIMESTAMP() < ends_at THEN 'live' ELSE 'ended' END`;
 const toPeriod = (r: RowDataPacket): Period => ({
@@ -61,6 +62,16 @@ async function prizesFor(periodId: number): Promise<Prize[]> {
  * next upcoming, else the most recent ended. `null` period = nothing yet.
  */
 export async function getBoard(periodId?: number, limit = 100): Promise<Board> {
+  if (periodId == null) {
+    const external = await getQboardsBoard(limit).catch((err: unknown) => {
+      // Allow existing installations to run before migration 0006 is applied.
+      if ((err as { code?: string }).code === "ER_NO_SUCH_TABLE") return null;
+      throw err;
+    });
+    // The public current board uses Q-boards points exclusively. Never fall
+    // back to manual dollar wagers while waiting for the first scheduled import.
+    return external ?? { period: null, prizes: [], rows: [], previous: [], source: "qboards", scoreKind: "points" };
+  }
   const periods = await listPeriods();
   const period =
     (periodId != null ? periods.find((p) => p.id === periodId) : undefined) ??

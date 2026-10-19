@@ -117,7 +117,7 @@ export default async function HomePage() {
                         <span className="absolute -bottom-2 left-1/2 z-10 grid size-6 -translate-x-1/2 place-items-center rounded-full font-mono text-xs font-bold text-bg" style={{ background: MEDAL[i] }}>{i + 1}</span>
                       </div>
                       <p className="mt-4 truncate font-head text-sm font-bold">{r ? r.name : "Open seat"}</p>
-                      <p className="font-mono text-xs text-text/60">{r ? formatMoney(r.wagered) : "$0.00"}</p>
+                      <p className="font-mono text-xs text-text/60">{board?.scoreKind === "points" ? `${Number(r?.wagered ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 })} pts` : r ? formatMoney(r.wagered) : "$0.00"}</p>
                       {board?.prizes[i] && (
                         <span className="mt-2 inline-block rounded-full px-2.5 py-0.5 font-mono text-xs font-bold text-bg" style={{ background: MEDAL[i] }}>
                           {formatMoney(board.prizes[i].amount)}
