@@ -16,7 +16,7 @@ export function KoPublic({ initial, id }: { initial: KoState; id?: number }) {
     <div className="space-y-8">
       <div className="panel neon-frame is-on flex flex-wrap items-center justify-between gap-4 p-6">
         <div className="min-w-0">
-          <p className="eyebrow">{t.max_players}-player knockout{t.prize ? ` · ${t.prize}` : ""}</p>
+          <p className="eyebrow">{t.team_size === 2 ? `Duo 2v2 · ${t.max_players} teams` : `${t.max_players}-player knockout`}{t.prize ? ` · ${t.prize}` : ""}</p>
           <h2 className="mt-1 font-display text-4xl"><span className="chrome">{t.title}</span></h2>
           {t.status === "open" && (
             <p className="mt-2 max-w-xl text-sm text-muted">
@@ -24,7 +24,7 @@ export function KoPublic({ initial, id }: { initial: KoState; id?: number }) {
             </p>
           )}
         </div>
-        <Counter value={s.registered} max={t.max_players} open={t.status === "open"} />
+        <Counter value={s.registered} max={s.capacity} open={t.status === "open"} />
       </div>
 
       {s.champion ? (

@@ -15,6 +15,11 @@ export function roundName(size: number, round: number): string {
   return fromEnd === 0 ? "Finals" : fromEnd === 1 ? "Semi-finals" : fromEnd === 2 ? "Quarter-finals" : `Round of ${2 ** (fromEnd + 1)}`;
 }
 
+/** Display name: the player, or "captain & teammate" for a duo team. */
+export function teamName(p: Pick<KoParticipant, "username"> & { partner?: KoParticipant | null }): string {
+  return p.partner ? `${p.username} & ${p.partner.username}` : p.username;
+}
+
 export function matchLabel(m: Pick<KoMatch, "round" | "match_index">, size: number): string {
   if (m.round === Math.round(Math.log2(size))) return m.match_index === 1 ? "3rd-place match" : "Grand Final";
   return `${roundName(size, m.round)} · Battle ${m.match_index + 1}`;
@@ -33,7 +38,7 @@ export function StateBadge({ state, dq = false }: { state: KoParticipant["state"
 }
 
 /** `onDisqualify` (admin dashboard only) adds the DQ control. */
-export function ParticipantRow({ p, index, onDisqualify }: { p: KoParticipant; index: number; onDisqualify?: (p: KoParticipant) => void }) {
+export function ParticipantRow({ p, index, onDisqualify, team }: { p: KoParticipant; index: number; onDisqualify?: (p: KoParticipant) => void; team?: string }) {
   const canDq = onDisqualify && !p.disqualified && (p.state === "registered" || p.state === "in_knockout");
   return (
     <li className={`entrant-in flex min-w-0 items-center gap-3 rounded-xl border border-line bg-bg-2 p-2 ${p.state === "eliminated" ? "opacity-45" : ""}`}>
@@ -42,6 +47,7 @@ export function ParticipantRow({ p, index, onDisqualify }: { p: KoParticipant; i
       <span className="min-w-0 flex-1">
         <span className="block truncate font-head font-bold">{p.username}</span>
         <span className="block truncate text-xs text-dim">{p.slot_name}{p.slot_provider ? ` · ${p.slot_provider}` : ""}</span>
+        {team && <span className="block truncate text-[11px] text-neon/80">Team {team}</span>}
       </span>
       <StateBadge state={p.state} dq={p.disqualified} />
       {canDq && (
@@ -75,8 +81,9 @@ const SIDE = {
   r: { color: "var(--color-silver)", glow: "rgb(217 225 220 / 0.4)", text: "text-silver", anim: "ko-slide-r" },
 };
 
-function Fighter({ p, side, outcome, big, result, pending }: {
-  p: KoParticipant | null; side: "l" | "r"; outcome: "win" | "lose" | null; big: boolean; result: KoMatch["p1_result"]; pending: boolean;
+function Fighter({ p, side, outcome, big, result, resultB, total, pending }: {
+  p: KoParticipant | null; side: "l" | "r"; outcome: "win" | "lose" | null; big: boolean;
+  result: KoMatch["p1_result"]; resultB: KoMatch["p1b_result"]; total: string | null; pending: boolean;
 }) {
   const s = SIDE[side];
   const art = big ? "240px" : "clamp(96px, min(26vw, 12vw + 40px), 200px)";
@@ -98,13 +105,15 @@ function Fighter({ p, side, outcome, big, result, pending }: {
         <span className="ko-sheen pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         {outcome === "win" && <span className="absolute inset-x-0 bottom-0 bg-gold py-1 text-center font-head text-[11px] font-black uppercase tracking-[0.3em] text-bg">Winner</span>}
       </div>
-      <p className={`w-full truncate font-head font-bold leading-tight ${big ? "text-4xl" : "text-[clamp(1rem,3.2vw,1.4rem)]"} ${outcome === "win" ? "text-gold" : ""}`}>{p.username}</p>
-      <p className={`w-full truncate font-semibold leading-tight ${big ? "text-xl" : "text-sm"} ${s.text}`}>{p.slot_name}</p>
+      <p className={`w-full truncate font-head font-bold leading-tight ${big ? "text-4xl" : "text-[clamp(1rem,3.2vw,1.4rem)]"} ${outcome === "win" ? "text-gold" : ""}`}>{teamName(p)}</p>
+      <p className={`w-full truncate font-semibold leading-tight ${big ? "text-xl" : "text-sm"} ${s.text}`}>{p.partner ? `${p.slot_name} + ${p.partner.slot_name}` : p.slot_name}</p>
       <p className={`w-full truncate uppercase tracking-wider text-dim ${big ? "text-sm" : "text-[10px]"}`}>{p.slot_provider || " "}</p>
-      {result ? (
+      {result && total ? (
         <div className="mt-2">
-          <p className={`font-mono font-bold tabular-nums leading-none ${big ? "text-6xl" : "text-[clamp(1.6rem,4.5vw,2.2rem)]"} ${outcome === "win" ? "text-gold" : "text-muted"}`}>x{result.multi}</p>
-          <p className={`mt-1 font-mono text-dim ${big ? "text-base" : "text-[11px]"}`}>${Number(result.payout).toLocaleString("en-US")} / ${Number(result.cost).toLocaleString("en-US")}</p>
+          <p className={`font-mono font-bold tabular-nums leading-none ${big ? "text-6xl" : "text-[clamp(1.6rem,4.5vw,2.2rem)]"} ${outcome === "win" ? "text-gold" : "text-muted"}`}>x{total}</p>
+          <p className={`mt-1 font-mono text-dim ${big ? "text-base" : "text-[11px]"}`}>
+            {resultB ? `x${result.multi} + x${resultB.multi}` : `$${Number(result.payout).toLocaleString("en-US")} / $${Number(result.cost).toLocaleString("en-US")}`}
+          </p>
         </div>
       ) : pending ? (
         <p className={`mt-2 animate-pulse font-pixel uppercase tracking-[0.2em] text-dim ${big ? "text-sm" : "text-[10px]"}`}>Bonus pending</p>
@@ -128,7 +137,7 @@ export function VsScreen({ match, size, big = false }: { match: KoMatch; size: n
         {match.status === "bye" && <span className="ml-2 text-neon">· bye</span>}
       </p>
       <div className={`grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch ${big ? "gap-12" : "gap-2 sm:gap-4"}`}>
-        <Fighter p={match.p1} side="l" outcome={outcome(match.p1)} big={big} result={match.p1_result} pending={match.status === "live"} />
+        <Fighter p={match.p1} side="l" outcome={outcome(match.p1)} big={big} result={match.p1_result} resultB={match.p1b_result} total={match.p1_multi} pending={match.status === "live"} />
         <span className="relative grid place-items-center self-start" style={{ height: art }}>
           <svg viewBox="0 0 40 120" className={`ko-bolt absolute ${big ? "h-56" : "h-28 sm:h-36"} text-neon`} aria-hidden>
             <path d="M24 0 8 58h12L12 120l20-70H20L30 0Z" fill="currentColor" opacity=".35" />
@@ -137,7 +146,7 @@ export function VsScreen({ match, size, big = false }: { match: KoMatch; size: n
             <span className="chrome">V</span><span className="neon-text">S</span>
           </span>
         </span>
-        <Fighter p={match.p2} side="r" outcome={outcome(match.p2)} big={big} result={match.p2_result} pending={match.status === "live"} />
+        <Fighter p={match.p2} side="r" outcome={outcome(match.p2)} big={big} result={match.p2_result} resultB={match.p2b_result} total={match.p2_multi} pending={match.status === "live"} />
       </div>
     </div>
   );
@@ -151,12 +160,13 @@ const BYE: Spinner = { username: "BYE", slot_name: "Free pass", slot_image: "", 
  * (crypto.randomInt); this only reveals it, slowing down onto P1 then P2.
  */
 export function useRollSpin(match: KoMatch, pool: KoParticipant[], onDone?: () => void) {
-  const [items] = useState<Spinner[]>(() => (pool.length ? pool.map((p) => ({ ...p })) : [BYE]));
+  const [items] = useState<Spinner[]>(() => (pool.length ? pool.map((p) => ({ ...p, username: teamName(p) })) : [BYE]));
   const [phase, setPhase] = useState<0 | 1 | 2>(0);
   const [shown, setShown] = useState<[Spinner, Spinner]>([items[0], items[0]]);
   const done = useRef(onDone);
-  const finals = useRef<[Spinner, Spinner]>([match.p1 ?? BYE, match.p2 ?? BYE]);
-  useEffect(() => { done.current = onDone; finals.current = [match.p1 ?? BYE, match.p2 ?? BYE]; }, [onDone, match.p1, match.p2]);
+  const asSpinner = (p: KoParticipant | null): Spinner => (p ? { ...p, username: teamName(p) } : BYE);
+  const finals = useRef<[Spinner, Spinner]>([asSpinner(match.p1), asSpinner(match.p2)]);
+  useEffect(() => { done.current = onDone; finals.current = [asSpinner(match.p1), asSpinner(match.p2)]; }, [onDone, match.p1, match.p2]);
   const p1Id = match.p1?.id ?? 0;
   const p2Id = match.p2?.id ?? 0;
 
@@ -228,15 +238,15 @@ export function RollReveal({ match, pool, size, big = false, onDone }: { match: 
 }
 
 function BracketCell({ m, champion }: { m: KoMatch; champion: number | null }) {
-  const row = (p: KoParticipant | null, res: KoMatch["p1_result"], side: "l" | "r") => {
+  const row = (p: KoParticipant | null, res: string | null, side: "l" | "r") => {
     const won = p && m.winner_id === p.id;
     const lost = p && m.winner_id != null && m.winner_id !== p.id;
     return (
       <div className={`flex items-center gap-2 px-2 py-1.5 ${won ? "bg-gold/10" : ""} ${lost ? "opacity-40" : ""}`}>
         <span className="h-5 w-0.5 rounded-full" style={{ background: SIDE[side].color }} />
         {p ? <SlotArt name={p.slot_name} src={p.slot_image} size={26} rounded="rounded-md" /> : <span className="size-[26px] rounded-md border border-dashed border-line" />}
-        <span className={`min-w-0 flex-1 truncate text-xs ${won ? "font-bold text-gold" : "text-muted"}`}>{p ? p.username : m.status === "void" ? "—" : "TBD"}</span>
-        {res && <span className={`font-mono text-[10px] ${won ? "text-gold" : "text-dim"}`}>x{res.multi}</span>}
+        <span className={`min-w-0 flex-1 truncate text-xs ${won ? "font-bold text-gold" : "text-muted"}`}>{p ? teamName(p) : m.status === "void" ? "—" : "TBD"}</span>
+        {res && <span className={`font-mono text-[10px] ${won ? "text-gold" : "text-dim"}`}>x{res}</span>}
         {won && champion === p?.id && <Crown className="size-3.5 text-gold" />}
       </div>
     );
@@ -244,9 +254,9 @@ function BracketCell({ m, champion }: { m: KoMatch; champion: number | null }) {
   const tone = m.status === "live" ? "border-danger/70 shadow-[0_0_20px_-6px_var(--color-danger)]" : m.status === "rolled" ? "border-gold/50" : m.winner_id ? "border-neon/30" : "border-line";
   return (
     <div className={`overflow-hidden rounded-xl border bg-surface ${tone} ${m.status === "void" ? "opacity-30" : ""}`}>
-      {row(m.p1, m.p1_result, "l")}
+      {row(m.p1, m.p1_multi, "l")}
       <div className="h-px bg-line" />
-      {m.status === "bye" ? <div className="px-3 py-1.5 text-xs text-dim">bye</div> : row(m.p2, m.p2_result, "r")}
+      {m.status === "bye" ? <div className="px-3 py-1.5 text-xs text-dim">bye</div> : row(m.p2, m.p2_multi, "r")}
     </div>
   );
 }
@@ -311,7 +321,7 @@ export function ChampionCard({ p, compact = false, celebrate = false }: { p: KoP
       ))}
       <Crown className={`ko-crown mx-auto text-gold ${compact ? "size-6" : "size-12"}`} />
       <div className={`mx-auto w-fit ${compact ? "mt-2" : "mt-4"}`}><SlotArt name={p.slot_name} src={p.slot_image} size={56} fluid={compact ? undefined : "clamp(96px, 28vw, 170px)"} /></div>
-      <p className={`mt-2 truncate font-head font-bold text-gold ${compact ? "text-base" : "text-3xl md:text-5xl"}`}>{p.username}</p>
+      <p className={`mt-2 truncate font-head font-bold text-gold ${compact ? "text-base" : "text-3xl md:text-5xl"}`}>{teamName(p)}</p>
       <p className={`truncate text-neon ${compact ? "text-[11px]" : "text-base md:text-xl"}`}>{p.slot_name}</p>
       {!compact && <p className="eyebrow mt-3 !text-gold">Tournament champion</p>}
     </div>
@@ -331,7 +341,7 @@ export function Podium({ state, compact = false }: { state: KoState; compact?: b
           <li key={i} className={`flex items-center gap-2 rounded-lg border p-2 ${i === 0 ? "border-gold/50 bg-gold/10" : "border-line bg-surface"}`}>
             <span className="w-7 font-mono text-[11px] font-bold text-dim">{PLACE[i]}</span>
             {p && <SlotArt name={p.slot_name} src={p.slot_image} size={28} rounded="rounded-md" />}
-            <span className={`min-w-0 flex-1 truncate text-xs ${i === 0 ? "font-bold text-gold" : "text-muted"}`}>{p?.username ?? "—"}</span>
+            <span className={`min-w-0 flex-1 truncate text-xs ${i === 0 ? "font-bold text-gold" : "text-muted"}`}>{p ? teamName(p) : "—"}</span>
             {amount != null && <span className="font-mono text-[11px] text-dim">${Number(amount).toLocaleString("en-US")}</span>}
           </li>
         ))}
@@ -342,7 +352,7 @@ export function Podium({ state, compact = false }: { state: KoState; compact?: b
     <div className={`flex flex-col items-center gap-2 rounded-2xl border border-line bg-surface p-4 text-center ${place === 2 ? "ko-slide-l" : "ko-slide-r"}`}>
       <span className="font-display text-4xl" style={{ color: place === 2 ? "var(--color-silver)" : "var(--color-bronze)" }}>{place}</span>
       {p ? <SlotArt name={p.slot_name} src={p.slot_image} size={96} /> : <span className="grid size-24 place-items-center rounded-xl border border-dashed border-line text-dim">—</span>}
-      <p className="max-w-[14ch] truncate font-head text-xl font-bold">{p?.username ?? "—"}</p>
+      <p className="max-w-[18ch] truncate font-head text-xl font-bold">{p ? teamName(p) : "—"}</p>
       {p && <p className="max-w-[18ch] truncate text-sm text-neon">{p.slot_name}</p>}
       <p className="text-xs uppercase tracking-widest text-dim">{PLACE[place - 1]} place{amount != null ? ` · $${Number(amount).toLocaleString("en-US")}` : ""}</p>
     </div>

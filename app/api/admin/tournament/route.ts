@@ -5,8 +5,8 @@ import { logAudit } from "@/lib/audit";
 import { ERROR_TEXT } from "@/lib/errors";
 import { isSameOrigin, json, jsonError } from "@/lib/http";
 import {
-  addPlayerManually, cancelRoll, closeRegistration, confirmRoll, createKo, disqualifyPlayer, ensureKoSchema, focusNext, openRegistration,
-  recordBattleResult, resetKo, rollPlayers, startBattle,
+  addPlayerManually, cancelRoll, closeRegistration, confirmRoll, createKo, disqualifyPlayer, ensureKoSchema, focusNext, makeTeams, openRegistration,
+  recordBattleResult, resetKo, rollPlayers, startBattle, undoTeams,
 } from "@/lib/knockout";
 import { ensureChatSubscription } from "@/lib/kickApi";
 import { findSlotByName } from "@/lib/slots";
@@ -23,10 +23,10 @@ const Amount = z.union([z.null(), Money]);
 const Body = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"), title: z.string().trim().min(1).max(120), prize: z.string().trim().max(120).default(""),
-    size: z.union([z.literal(4), z.literal(8), z.literal(16), z.literal(32)]), prizes: z.tuple([Amount, Amount, Amount]).optional(),
+    size: z.union([z.literal(4), z.literal(8), z.literal(16), z.literal(32)]), duo: z.boolean().default(false), prizes: z.tuple([Amount, Amount, Amount]).optional(),
   }),
-  z.object({ action: z.enum(["open", "close", "reset", "roll", "confirm", "cancel_roll", "start", "next"]), id: Id }),
-  z.object({ action: z.literal("result"), id: Id, matchId: z.number().int().positive(), p1: Bonus, p2: Bonus }),
+  z.object({ action: z.enum(["open", "close", "reset", "roll", "confirm", "cancel_roll", "start", "next", "make_teams", "undo_teams"]), id: Id }),
+  z.object({ action: z.literal("result"), id: Id, matchId: z.number().int().positive(), p1: Bonus, p2: Bonus, p1b: Bonus.optional(), p2b: Bonus.optional() }),
   z.object({ action: z.literal("disqualify"), id: Id, participantId: z.number().int().positive() }),
   z.object({ action: z.literal("add_player"), id: Id, username: z.string().trim().min(1).max(40), slot: z.string().trim().max(80).default("") }),
 ]);
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     await ensureKoSchema();
     let result: unknown = null;
     switch (body.action) {
-      case "create": result = { id: await createKo({ title: body.title, prize: body.prize, size: body.size, prizes: body.prizes }) }; break;
+      case "create": result = { id: await createKo({ title: body.title, prize: body.prize, size: body.size, duo: body.duo, prizes: body.prizes }) }; break;
       case "open":
         await openRegistration(body.id);
         // official Kick webhook for !join (best effort; the dashboard socket is the fallback)
@@ -57,7 +57,9 @@ export async function POST(request: Request) {
       case "cancel_roll": await cancelRoll(body.id); break;
       case "start": result = { matchId: await startBattle(body.id) }; break;
       case "next": result = { matchId: await focusNext(body.id) }; break;
-      case "result": result = await recordBattleResult(body.id, body.matchId, body.p1, body.p2); break;
+      case "result": result = await recordBattleResult(body.id, body.matchId, body.p1, body.p2, body.p1b && body.p2b ? { p1b: body.p1b, p2b: body.p2b } : undefined); break;
+      case "make_teams": result = await makeTeams(body.id); break;
+      case "undo_teams": await undoTeams(body.id); break;
       case "disqualify": result = await disqualifyPlayer(body.id, body.participantId); break;
       case "add_player": result = await addPlayerManually(body.username, body.slot ? await findSlotByName(body.slot) : null); break;
     }

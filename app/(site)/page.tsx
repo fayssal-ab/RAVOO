@@ -2,6 +2,7 @@ import Image from "next/image";
 import { QzinoLogo } from "@/components/ui/QzinoLogo";
 import Link from "next/link";
 import { ArrowRight, Coins, Gift, Timer } from "lucide-react";
+import { FloatingDecor } from "@/components/decor/FloatingDecor";
 import { Hero } from "@/components/home/Hero";
 import { PromoSteps } from "@/components/promo/PromoSteps";
 import { StreamBox } from "@/components/stream/StreamBox";
@@ -42,7 +43,8 @@ export default async function HomePage() {
   const left = period ? daysLeft(period.state === "upcoming" ? period.starts_at : period.ends_at) : 0;
 
   return (
-    <>
+    <div className="relative">
+      <FloatingDecor />
       <Hero code={QZINO_CODE} qzinoUrl={QZINO_URL} pool={period ? formatMoney(period.prize_pool, { cents: false }) : null} />
 
       {/* Qzino card */}
@@ -213,6 +215,6 @@ export default async function HomePage() {
         </div>
         <p className="mt-6 flex items-center justify-center gap-2 text-sm text-dim"><Coins className="size-4" /> &ldquo;I never sleep&rdquo;: Ravo, on Kick</p>
       </section>
-    </>
+    </div>
   );
 }

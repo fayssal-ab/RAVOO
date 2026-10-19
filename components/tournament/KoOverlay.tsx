@@ -19,7 +19,7 @@ export function KoOverlay() {
         <div className="mb-6 flex items-center justify-between">
           <p className="font-display text-5xl"><span className="chrome">{t.title}</span></p>
           <p className="font-head text-xl font-bold uppercase tracking-[0.2em] text-neon">
-            {t.status === "open" ? `!join · ${state.registered}/${t.max_players}` : focus ? roundName(t.max_players, focus.round) : ""}
+            {t.status === "open" ? `!join · ${state.registered}/${state.capacity}` : focus ? roundName(t.max_players, focus.round) : ""}
           </p>
         </div>
         {state.champion ? (

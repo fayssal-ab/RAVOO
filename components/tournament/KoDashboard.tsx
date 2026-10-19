@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Dices, Play, SkipForward, UserPlus } from "lucide-react";
 import { confirmDialog } from "@/components/ui/confirm";
 import type { KoMatch, KoParticipant, KoState } from "@/lib/knockout";
-import { Bracket, Counter, ParticipantRow, Podium, RollReveal, VsScreen, roundName } from "./parts";
+import { Bracket, Counter, ParticipantRow, Podium, RollReveal, VsScreen, roundName, teamName } from "./parts";
 import { useJoinReader, type ReaderStatus } from "./useJoinReader";
 import { useKoState } from "./useKoState";
 
@@ -36,7 +36,7 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
   const [msg, setMsg] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<number | null>(null);
   const [tab, setTab] = useState<Tab>("bracket");
-  const [form, setForm] = useState({ title: "", prize: "", size: 16 as (typeof SIZES)[number], p1: "", p2: "", p3: "" });
+  const [form, setForm] = useState({ title: "", prize: "", size: 16 as (typeof SIZES)[number], duo: false, p1: "", p2: "", p3: "" });
   const [manual, setManual] = useState({ username: "", slot: "" });
 
   const act = useCallback(async (action: string, extra: Record<string, unknown> = {}, confirmText?: string) => {
@@ -80,7 +80,7 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
           className="panel space-y-5 p-6"
           onSubmit={(e) => {
             e.preventDefault();
-            act("create", { title: form.title, prize: form.prize, size: form.size, prizes: [form.p1 || null, form.p2 || null, form.p3 || null] });
+            act("create", { title: form.title, prize: form.prize, size: form.size, duo: form.duo, prizes: [form.p1 || null, form.p2 || null, form.p3 || null] });
           }}
         >
           <p className="font-display text-3xl"><span className="chrome">New</span> <span className="neon-text">tournament</span></p>
@@ -93,7 +93,19 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
             </label>
           </div>
           <div>
-            <span className="label">Players</span>
+            <span className="label">Mode</span>
+            <div className="grid grid-cols-2 gap-2">
+              {([false, true] as const).map((duo) => (
+                <button key={String(duo)} type="button" onClick={() => setForm({ ...form, duo })} aria-pressed={form.duo === duo}
+                  className={`rounded-xl border-2 px-3 py-3 text-left transition ${form.duo === duo ? "border-neon bg-neon/10" : "border-line-hot hover:border-neon"}`}>
+                  <span className="block font-head text-lg font-bold">{duo ? "Duo · 2v2" : "Solo · 1v1"}</span>
+                  <span className="block text-xs text-muted">{duo ? "Everyone !joins alone, then gets a random teammate. Both bonuses count: the higher combined multiplier wins." : "Each player battles alone. The higher multiplier wins."}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <span className="label">{form.duo ? "Teams" : "Players"}</span>
             <div className="grid grid-cols-4 gap-2">
               {SIZES.map((n) => (
                 <button key={n} type="button" onClick={() => setForm({ ...form, size: n })} aria-pressed={form.size === n}
@@ -110,7 +122,7 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
               </label>
             ))}
           </div>
-          <button disabled={busy !== null} className="btn btn-neon">Create {form.size}-player tournament</button>
+          <button disabled={busy !== null} className="btn btn-neon">Create {form.duo ? `${form.size}-team duo (${form.size * 2} players)` : `${form.size}-player`} tournament</button>
           {msg && <p role="alert" className="text-sm text-danger">{msg}</p>}
         </form>
       </div>
@@ -118,6 +130,10 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
   }
 
   const size = t.max_players;
+  const duo = t.team_size === 2;
+  // duo: teammate name for each player in the list
+  const mateOf = new Map<number, string>();
+  if (duo) for (const p of state.participants) if (p.partner) { mateOf.set(p.id, p.partner.username); mateOf.set(p.partner.id, p.username); }
   const showRoll = focus && focus.status === "rolled" && revealed !== focus.roll_seq;
   const tabs: { key: Tab; label: string }[] = [
     { key: "bracket", label: "Full bracket" }, { key: "round", label: "Current round" }, { key: "qualified", label: "Qualified" },
@@ -129,19 +145,25 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
     <div className="space-y-6">
       <div className="panel flex flex-wrap items-center justify-between gap-4 p-5">
         <div>
-          <p className="eyebrow">Tournament #{t.id} · {size} players{t.prize ? ` · ${t.prize}` : ""}</p>
+          <p className="eyebrow">Tournament #{t.id} · {duo ? `Duo 2v2 · ${size} teams` : `Solo · ${size} players`}{t.prize ? ` · ${t.prize}` : ""}</p>
           <h2 className="font-display text-3xl"><span className="chrome">{t.title}</span></h2>
           <p className={`mt-1 text-xs ${READER[reader.status].tone}`}>● {READER[reader.status].label}</p>
           <p className="text-[11px] text-dim">
             {reader.lastSeen ? <>Last chat message: <span className="text-muted">{reader.lastSeen.username}</span> at {new Date(reader.lastSeen.at).toLocaleTimeString()}</> : "No chat message received yet (set the webhook URL in your Kick app)"}
           </p>
         </div>
-        <Counter value={state.registered} max={size} open={t.status === "open"} />
+        <Counter value={state.registered} max={state.capacity} open={t.status === "open"} />
         <div className="flex flex-wrap gap-2">
           {t.status === "closed" ? (
-            <button disabled={busy !== null || state.registered >= size} onClick={() => act("open")} className="btn btn-neon btn-sm">Open registration</button>
+            <button disabled={busy !== null || state.registered >= state.capacity || state.teamsMade} onClick={() => act("open")} className="btn btn-neon btn-sm">Open registration</button>
           ) : (
             <button disabled={busy !== null} onClick={() => act("close", {}, "Close registration? Nobody new can join (registered players can still change slot until they're rolled).")} className="btn btn-ghost btn-sm">Close registration</button>
+          )}
+          {duo && t.status === "closed" && !state.teamsMade && (
+            <button disabled={busy !== null} onClick={() => act("make_teams", {}, `Draw random teams of 2 from the ${state.registered} registered players? Registration stays closed once teams are drawn.`)} className="btn btn-neon btn-sm">Make teams</button>
+          )}
+          {duo && state.teamsMade && firstRoundOpen && !state.pendingRoll && state.matches.every((m) => m.round !== 1 || m.status === "empty") && (
+            <button disabled={busy !== null} onClick={() => act("undo_teams", {}, "Undo the team draw? Everyone goes back to waiting alone.")} className="btn btn-ghost btn-sm">Undo teams</button>
           )}
           <button disabled={busy !== null} onClick={() => act("reset", {}, "Reset the tournament? It is cancelled and a new one can be created. This can't be undone.")} className="btn btn-ghost btn-sm !text-danger">Reset</button>
         </div>
@@ -163,20 +185,24 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
           ) : (
             <div className="py-16 text-center">
               <p className="font-display text-4xl"><span className="chrome">{state.eligible >= 2 || firstRoundOpen ? "Ready to roll" : "Waiting for players"}</span></p>
-              <p className="mt-2 text-sm text-dim">{state.eligible} player(s) waiting · chat types <code className="text-neon">!join &lt;slot&gt;</code> to enter</p>
+              <p className="mt-2 text-sm text-dim">
+                {duo && !state.teamsMade
+                  ? <>{state.registered} player(s) registered · close registration, then <b className="text-text">Make teams</b>{state.registered % 2 ? <span className="text-gold"> (odd number: add or disqualify one player first)</span> : null}</>
+                  : <>{state.eligible} {duo ? "team(s)" : "player(s)"} waiting · chat types <code className="text-neon">!join &lt;slot&gt;</code> to enter</>}
+              </p>
             </div>
           )}
 
           <div className="mt-8 flex flex-wrap justify-center gap-2">
-            <button disabled={busy !== null || !canRoll} onClick={() => act("roll")} className="btn btn-neon btn-sm"><Dices className="size-4" /> Roll 2 players</button>
+            <button disabled={busy !== null || !canRoll} onClick={() => act("roll")} className="btn btn-neon btn-sm"><Dices className="size-4" /> Roll 2 {duo ? "teams" : "players"}</button>
             <button disabled={busy !== null || !state.pendingRoll} onClick={() => act("confirm")} className="btn btn-chrome btn-sm">Confirm battle</button>
             <button disabled={busy !== null || !state.pendingRoll} onClick={() => act("cancel_roll", {}, "Cancel this roll? Both players go back to the pool.")} className="btn btn-ghost btn-sm">Cancel roll</button>
             <button disabled={busy !== null || !!state.live || !!state.pendingRoll || !state.nextReady} onClick={() => act("start")} className="btn btn-neon btn-sm"><Play className="size-4" /> Start battle</button>
             <button disabled={busy !== null || !!state.live} onClick={() => act("next")} className="btn btn-ghost btn-sm"><SkipForward className="size-4" /> Next battle</button>
           </div>
           {state.live && (
-            <BattleResultForm key={state.live.id} match={state.live} busy={busy !== null}
-              onSubmit={(p1, p2) => act("result", { matchId: state.live!.id, p1, p2 })} />
+            <BattleResultForm key={state.live.id} match={state.live} duo={duo} busy={busy !== null}
+              onSubmit={(r) => act("result", { matchId: state.live!.id, ...r })} />
           )}
           {state.eligible === 1 && t.status === "open" && firstRoundOpen && (
             <p className="mt-3 text-center text-xs text-dim">One player is waiting. Close registration to give them a bye, or wait for another !join.</p>
@@ -202,7 +228,7 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
             <p className="text-sm text-dim">{t.status === "open" ? "Waiting for the first !join…" : "Open registration to collect !join from chat."}</p>
           ) : (
             <ol className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
-              {state.participants.map((p, i) => <ParticipantRow key={p.id} p={p} index={i} onDisqualify={disqualify} />)}
+              {state.participants.map((p, i) => <ParticipantRow key={p.id} p={p} index={i} onDisqualify={disqualify} team={mateOf.has(p.id) ? `with ${mateOf.get(p.id)}` : undefined} />)}
             </ol>
           )}
           {reader.events.length > 0 && (
@@ -260,33 +286,62 @@ function multi(b: Bonus): string | null {
   return (Number(b.payout) / Number(b.cost)).toFixed(2); // preview only; the server decides with exact decimals
 }
 
-/** Live battle result: each bonus cost + payout. Higher multiplier wins; exact tie → replay. */
-function BattleResultForm({ match, busy, onSubmit }: { match: KoMatch; busy: boolean; onSubmit: (p1: Bonus, p2: Bonus) => void }) {
-  const [p1, setP1] = useState<Bonus>({ cost: "", payout: "" });
-  const [p2, setP2] = useState<Bonus>({ cost: "", payout: "" });
-  const m1 = multi(p1), m2 = multi(p2);
+/**
+ * Live battle result: each bonus cost + payout. Solo: higher multiplier wins.
+ * Duo: both teammates' bonuses, the higher combined multiplier wins. Exact
+ * tie → replay.
+ */
+function BattleResultForm({ match, duo, busy, onSubmit }: {
+  match: KoMatch; duo: boolean; busy: boolean;
+  onSubmit: (r: { p1: Bonus; p2: Bonus; p1b?: Bonus; p2b?: Bonus }) => void;
+}) {
+  const empty = { cost: "", payout: "" };
+  const [b, setB] = useState<Record<"p1" | "p1b" | "p2" | "p2b", Bonus>>({ p1: empty, p1b: empty, p2: empty, p2b: empty });
+  const set = (k: keyof typeof b) => (v: Bonus) => setB((x) => ({ ...x, [k]: v }));
+  const total = (a: Bonus, c: Bonus) => {
+    const x = multi(a);
+    if (!duo) return x;
+    const y = multi(c);
+    return x && y ? (Number(x) + Number(y)).toFixed(2) : null;
+  };
+  const m1 = total(b.p1, b.p1b), m2 = total(b.p2, b.p2b);
   const lead = m1 && m2 ? (Number(m1) > Number(m2) ? 1 : Number(m2) > Number(m1) ? 2 : 0) : null;
-  const side = (n: 1 | 2, b: Bonus, set: (v: Bonus) => void, m: string | null) => (
-    <div className={`rounded-2xl border-2 p-3 ${lead === n ? "border-gold/70 bg-gold/10" : n === 1 ? "border-neon/30 bg-bg-2" : "border-silver/30 bg-bg-2"}`}>
-      <p className={`truncate font-head font-bold ${n === 1 ? "text-neon" : "text-silver"}`}>{(n === 1 ? match.p1 : match.p2)?.username ?? `Player ${n}`}</p>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <label className="block"><span className="label">Bonus cost ($)</span>
-          <input inputMode="decimal" value={b.cost} onChange={(e) => set({ ...b, cost: e.target.value.trim() })} placeholder="100" className="field text-right font-mono" />
+  const bonus = (label: string, v: Bonus, onChange: (v: Bonus) => void) => (
+    <div>
+      <p className="mb-1 truncate text-xs font-semibold text-muted">{label}</p>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="block"><span className="label">Cost ($)</span>
+          <input inputMode="decimal" value={v.cost} onChange={(e) => onChange({ ...v, cost: e.target.value.trim() })} placeholder="100" className="field text-right font-mono" />
         </label>
         <label className="block"><span className="label">Payout ($)</span>
-          <input inputMode="decimal" value={b.payout} onChange={(e) => set({ ...b, payout: e.target.value.trim() })} placeholder="125" className="field text-right font-mono" />
+          <input inputMode="decimal" value={v.payout} onChange={(e) => onChange({ ...v, payout: e.target.value.trim() })} placeholder="125" className="field text-right font-mono" />
         </label>
       </div>
-      <p className={`mt-2 text-center font-mono text-3xl font-bold ${lead === n ? "text-gold" : "text-muted"}`}>{m ? `x${m}` : "x—"}</p>
+      <p className="mt-1 text-right font-mono text-xs text-dim">{multi(v) ? `x${multi(v)}` : "x—"}</p>
     </div>
   );
+  const side = (n: 1 | 2) => {
+    const cap = n === 1 ? match.p1 : match.p2;
+    const m = n === 1 ? m1 : m2;
+    return (
+      <div className={`space-y-3 rounded-2xl border-2 p-3 ${lead === n ? "border-gold/70 bg-gold/10" : n === 1 ? "border-neon/30 bg-bg-2" : "border-silver/30 bg-bg-2"}`}>
+        <p className={`truncate font-head font-bold ${n === 1 ? "text-neon" : "text-silver"}`}>{cap ? teamName(cap) : `Side ${n}`}</p>
+        {bonus(duo ? cap?.username ?? "Player 1" : "Bonus", b[n === 1 ? "p1" : "p2"], set(n === 1 ? "p1" : "p2"))}
+        {duo && bonus(cap?.partner?.username ?? "Player 2", b[n === 1 ? "p1b" : "p2b"], set(n === 1 ? "p1b" : "p2b"))}
+        <p className={`text-center font-mono text-3xl font-bold ${lead === n ? "text-gold" : "text-muted"}`}>{m ? `x${m}` : "x—"}</p>
+      </div>
+    );
+  };
+  const winner = lead === 1 ? match.p1 : lead === 2 ? match.p2 : null;
   return (
-    <form className="mt-6 space-y-3" onSubmit={(e) => { e.preventDefault(); if (m1 && m2) onSubmit(p1, p2); }}>
-      <p className="text-center font-head text-xs font-bold uppercase tracking-[0.18em] text-muted">Bonus results · the higher multiplier wins</p>
-      <div className="grid gap-3 sm:grid-cols-2">{side(1, p1, setP1, m1)}{side(2, p2, setP2, m2)}</div>
+    <form className="mt-6 space-y-3" onSubmit={(e) => { e.preventDefault(); if (m1 && m2) onSubmit(duo ? b : { p1: b.p1, p2: b.p2 }); }}>
+      <p className="text-center font-head text-xs font-bold uppercase tracking-[0.18em] text-muted">
+        Bonus results · {duo ? "the higher combined multiplier wins" : "the higher multiplier wins"}
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2">{side(1)}{side(2)}</div>
       {lead === 0 && <p className="text-center text-sm text-gold">Exact tie: replay the bonus and enter the replay&apos;s results.</p>}
       <div className="flex justify-center">
-        <button disabled={busy || !m1 || !m2 || lead === 0} className="btn btn-neon">Save result{lead ? `: ${(lead === 1 ? match.p1 : match.p2)?.username ?? ""} wins` : ""}</button>
+        <button disabled={busy || !m1 || !m2 || lead === 0} className="btn btn-neon">Save result{winner ? `: ${teamName(winner)} win${duo ? "" : "s"}` : ""}</button>
       </div>
     </form>
   );
