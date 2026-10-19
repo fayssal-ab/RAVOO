@@ -66,10 +66,16 @@ export default async function BonusHuntsPage({ searchParams }: { searchParams: P
                 </div>
                 <div className="panel p-5">
                   <p className="flex items-center gap-2 font-head text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted"><Flame className="size-4 text-danger" /> Hunt result</p>
-                  <p className={`mt-2 font-mono text-3xl font-bold ${Number(hunt.stats.profit) >= 0 ? "text-neon" : "text-danger"}`}>
-                    {Number(hunt.stats.profit) >= 0 ? "+" : ""}{formatMoney(hunt.stats.profit)}
-                  </p>
-                  <p className="text-sm text-muted">Total bet {formatMoney(hunt.stats.total_bet)} · status {STATUS[hunt.status].toLowerCase()}</p>
+                  {hunt.stats.complete ? (
+                    <p className={`mt-2 font-mono text-3xl font-bold ${Number(hunt.stats.profit) >= 0 ? "text-neon" : "text-danger"}`}>
+                      {Number(hunt.stats.profit) >= 0 ? "+" : "-"}{formatMoney(Math.abs(Number(hunt.stats.profit)))}
+                    </p>
+                  ) : (
+                    <p className="mt-2 font-head text-xl font-bold text-muted">
+                      {hunt.stats.count === 0 ? "Collecting bonuses…" : `${hunt.stats.count - hunt.stats.opened} bonus${hunt.stats.count - hunt.stats.opened === 1 ? "" : "es"} to open`}
+                    </p>
+                  )}
+                  <p className="text-sm text-muted">Total bet {formatMoney(hunt.stats.total_bet)} · {STATUS[hunt.status].toLowerCase()}</p>
                 </div>
               </div>
             </Reveal>
