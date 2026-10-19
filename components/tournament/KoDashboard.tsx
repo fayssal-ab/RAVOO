@@ -12,11 +12,10 @@ import { useKoState } from "./useKoState";
 // (polled); every button is a server call with backend rule checks.
 
 const READER: Record<ReaderStatus, { label: string; tone: string }> = {
-  off: { label: "Chat reader off", tone: "text-dim" },
-  connecting: { label: "Connecting to Kick chat…", tone: "text-gold" },
-  live: { label: "Listening to Kick chat", tone: "text-neon" },
-  reconnecting: { label: "Reconnecting to Kick chat…", tone: "text-gold" },
-  error: { label: "Kick chat unreachable, retrying", tone: "text-danger" },
+  off: { label: "Chat webhook off", tone: "text-dim" },
+  connecting: { label: "Checking Kick chat webhook…", tone: "text-gold" },
+  live: { label: "Kick chat webhook connected", tone: "text-neon" },
+  error: { label: "Kick webhook not subscribed, retrying", tone: "text-danger" },
 };
 
 const OUTCOME: Record<string, string> = {
@@ -129,7 +128,7 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
           <h2 className="font-display text-3xl"><span className="chrome">{t.title}</span></h2>
           <p className={`mt-1 text-xs ${READER[reader.status].tone}`}>● {READER[reader.status].label}</p>
           <p className="text-[11px] text-dim">
-            {reader.lastSeen ? <>Last chat message: <span className="text-muted">{reader.lastSeen.username}</span> at {new Date(reader.lastSeen.at).toLocaleTimeString()}</> : "No chat message received yet on this page"}
+            {reader.lastSeen ? <>Last chat message: <span className="text-muted">{reader.lastSeen.username}</span> at {new Date(reader.lastSeen.at).toLocaleTimeString()}</> : "No chat message received yet (set the webhook URL in your Kick app)"}
           </p>
         </div>
         <Counter value={state.registered} max={size} open={t.status === "open"} />

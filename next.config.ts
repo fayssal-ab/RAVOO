@@ -11,7 +11,7 @@ const csp = [
   "img-src 'self' data: blob: https://files.kick.com https://*.kick.com https://cdn.discordapp.com https://mediumrare.imgix.net",
   "font-src 'self' data:",
   "frame-src https://player.kick.com https://kick.com",
-  "connect-src 'self' wss://ws-us2.pusher.com wss://*.pusher.com",
+  "connect-src 'self'",
   "media-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",

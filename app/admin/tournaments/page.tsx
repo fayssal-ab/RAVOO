@@ -18,7 +18,7 @@ export default async function AdminTournaments() {
   return (
     <>
       <AdminTitle title="Tournament">
-        Pick 4, 8, 16 or 32 players → open registration → viewers type <code className="text-neon">!join &lt;slot&gt;</code> in Kick chat (keep this page open) or you add them here.
+        Pick 4, 8, 16 or 32 players → open registration → viewers type <code className="text-neon">!join &lt;slot&gt;</code> in Kick chat (received by the Kick webhook, this page can be closed) or you add them here.
         Plain <code className="text-neon">!join</code> gives a random slot. Roll 2 players → confirm → start → enter both bonus results: the higher multiplier wins.
       </AdminTitle>
       <div className="mb-6 flex flex-wrap gap-2">

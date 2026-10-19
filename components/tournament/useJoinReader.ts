@@ -2,98 +2,50 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Reads Ravo's Kick chat through Kick's public chat socket (Kick publishes no
-// official chat-read API) and relays every `!join` to the server with the
-// sender's Kick user id and the message id (de-duplicated server-side).
-// Reconnects with backoff; messages sent while disconnected are lost, so keep
-// the dashboard open during registration.
+// `!join` arrives server-side through Kick's official chat webhook
+// (/api/kick/webhook). This hook only polls the webhook status and the
+// recent join log for the dashboard; the dashboard can be closed without
+// losing registrations.
 
-export type ReaderStatus = "off" | "connecting" | "live" | "reconnecting" | "error";
+export type ReaderStatus = "off" | "connecting" | "live" | "error";
 export interface JoinEvent { at: number; username: string; outcome: string; slot?: string }
 
-interface KickChatEvent { id?: string; content?: string; created_at?: string; sender?: { id?: number | string; username?: string } }
-
-interface RelayOptions {
-  /** Whole-message command to relay, e.g. /^\s*!join\s*$/i */
-  match: RegExp;
-  /** Admin endpoint receiving { messageId, userId, username, content, sentAt } */
-  endpoint: string;
+interface StatusResponse {
+  ok: boolean; subscribed: boolean; error: string | null;
+  last: { username: string; at: string } | null;
+  joins: { username: string; outcome: string | null; slot: string | null; at: string }[];
 }
 
-const JOIN: RelayOptions = { match: /^\s*!join(?:\s.*)?$/i, endpoint: "/api/admin/tournament/join" };
-
-export function useJoinReader(enabled: boolean, onJoin?: () => void, opts: RelayOptions = JOIN) {
-  const { match, endpoint } = opts;
-  const [status, setStatus] = useState<ReaderStatus>("off");
+export function useJoinReader(enabled: boolean, onJoin?: () => void) {
+  const [status, setStatus] = useState<ReaderStatus>(enabled ? "connecting" : "off");
   const [events, setEvents] = useState<JoinEvent[]>([]);
-  // Proof the socket really receives chat: last message of any kind.
   const [lastSeen, setLastSeen] = useState<{ at: number; username: string } | null>(null);
   const cb = useRef(onJoin);
   useEffect(() => { cb.current = onJoin; }, [onJoin]);
 
   useEffect(() => {
     if (!enabled) return;
-    let ws: WebSocket | null = null;
     let stopped = false;
-    let attempt = 0;
-    let retry: ReturnType<typeof setTimeout> | null = null;
-
-    const connect = async () => {
-      setStatus(attempt === 0 ? "connecting" : "reconnecting");
+    let newest = "";
+    const poll = async () => {
       try {
-        const res = await fetch("/api/admin/tournament/listen-info", { cache: "no-store" });
-        const info = (await res.json()) as { ok: boolean; wsUrl: string; socketChannel: string; chatEvent: string };
-        if (!info.ok) throw new Error("chatroom_unresolved");
+        const res = await fetch("/api/admin/kick/status", { cache: "no-store" });
+        const d = (await res.json()) as StatusResponse;
         if (stopped) return;
-        ws = new WebSocket(info.wsUrl);
-        ws.onopen = () => ws?.send(JSON.stringify({ event: "pusher:subscribe", data: { auth: "", channel: info.socketChannel } }));
-        ws.onmessage = (e) => {
-          let msg: { event?: string; data?: string };
-          try { msg = JSON.parse(String(e.data)); } catch { return; }
-          if (msg.event === "pusher_internal:subscription_succeeded") { attempt = 0; setStatus("live"); return; }
-          if (msg.event === "pusher:ping") { ws?.send(JSON.stringify({ event: "pusher:pong", data: {} })); return; }
-          if (msg.event !== info.chatEvent || !msg.data) return;
-          let chat: KickChatEvent;
-          try { chat = JSON.parse(msg.data); } catch { return; }
-          if (chat.sender?.username) setLastSeen({ at: Date.now(), username: chat.sender.username });
-          if (!chat.content || !match.test(chat.content)) return;
-          const userId = chat.sender?.id;
-          const username = chat.sender?.username;
-          if (!chat.id || userId == null || !username) return;
-          fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ messageId: chat.id, userId: String(userId), username, content: chat.content, sentAt: chat.created_at ?? null }),
-          })
-            .then((r) => r.json())
-            .then((d: { outcome?: string; error?: string; slot?: string }) => {
-              setEvents((list) => [{ at: Date.now(), username, outcome: d.outcome ?? d.error ?? "error", slot: d.slot }, ...list].slice(0, 30));
-              cb.current?.();
-            })
-            .catch(() => setEvents((list) => [{ at: Date.now(), username, outcome: "network_error" }, ...list].slice(0, 30)));
-        };
-        ws.onclose = () => {
-          if (stopped) return;
-          setStatus("reconnecting");
-          attempt++;
-          retry = setTimeout(connect, Math.min(30_000, 1000 * 2 ** Math.min(attempt, 5)));
-        };
-        ws.onerror = () => ws?.close();
+        setStatus(d.ok && d.subscribed ? "live" : "error");
+        setLastSeen(d.last ? { at: Date.parse(d.last.at), username: d.last.username } : null);
+        setEvents(d.joins.map((j) => ({ at: Date.parse(j.at), username: j.username, outcome: j.outcome ?? "", slot: j.slot ?? undefined })));
+        const top = d.joins[0] ? `${d.joins[0].at}|${d.joins[0].username}` : "";
+        if (newest && top !== newest) cb.current?.();
+        newest = top;
       } catch {
-        if (stopped) return;
-        setStatus("error");
-        attempt++;
-        retry = setTimeout(connect, Math.min(30_000, 1000 * 2 ** Math.min(attempt, 5)));
+        if (!stopped) setStatus("error");
       }
     };
-    connect();
-    return () => {
-      stopped = true;
-      if (retry) clearTimeout(retry);
-      ws?.close();
-      setStatus("off");
-    };
-  }, [enabled, match, endpoint]);
+    poll();
+    const id = setInterval(poll, 3000);
+    return () => { stopped = true; clearInterval(id); setStatus("off"); };
+  }, [enabled]);
 
   return { status, events, lastSeen };
 }
