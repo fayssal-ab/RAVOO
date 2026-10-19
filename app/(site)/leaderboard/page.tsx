@@ -69,7 +69,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
               <p className="mt-3 text-xs text-muted">
                 Updated every 6 hours · Last sync {new Date(board.syncedAt.replace(" ", "T") + "Z").toLocaleString("en-GB", { timeZone: "UTC" })} UTC
                 {board.syncDelayed && " · Update delayed"}
-                {" · "}<a href={QBOARDS_URL} target="_blank" rel="noopener noreferrer" className="underline">Official board</a>
+                {" · "}<a href={QBOARDS_URL} target="_blank" rel="noopener noreferrer" className="inline-block py-2 underline">Official board</a>
               </p>
             )}
           </header>

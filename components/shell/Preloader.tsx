@@ -100,7 +100,7 @@ export function Preloader() {
           {/* the pug keeps spinning */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/media/pug-mascot.webp"
+            src="/media/ravo-mascot.webp"
             alt=""
             width={760}
             height={834}

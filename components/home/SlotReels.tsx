@@ -4,14 +4,15 @@ import { motion, useReducedMotion } from "motion/react";
 import { useMemo, useState } from "react";
 import { Chip, Club, Paw, Spade } from "@/components/decor/shapes";
 
-// Hero slot machine: four chrome-framed reels spin through RAVO symbols
-// (paws, chips, suits, 7s, $) and lock one by one on R · A · V · O, a lever
-// pulls as they start, then a neon light sweeps the payline.
+// Hero slot machine: four chrome-framed reels. Each reel rests on its letter
+// (so the headline always reads RAVO: before the spin, without JS, with
+// reduced motion), spins through the symbols once when the site is ready and
+// locks back on R · A · V · O one by one, then a light sweeps the payline.
 
 const SYMBOLS = ["paw", "chip", "spade", "7", "club", "$"] as const;
 type Sym = (typeof SYMBOLS)[number];
 const LETTERS = ["R", "A", "V", "O"];
-const STRIP = 14; // symbols before the letter
+const STRIP = 14; // symbols between the starting and landing letter
 
 function Symbol({ s }: { s: Sym }) {
   if (s === "7" || s === "$") return <span className="font-display text-[0.9em] text-neon/80">{s}</span>;
@@ -19,12 +20,20 @@ function Symbol({ s }: { s: Sym }) {
   return <Cmp className="size-[0.62em] text-neon/70" />;
 }
 
+function Letter({ letter, r }: { letter: string; r: number }) {
+  return (
+    <span className="grid h-[1.15em] w-full place-items-center font-display leading-none">
+      <span className={r % 2 ? "neon-text" : "chrome"}>{letter}</span>
+    </span>
+  );
+}
+
 export function SlotReels({ start }: { start: boolean }) {
   const reduce = useReducedMotion();
   const [landed, setLanded] = useState(0);
   // deterministic strips (no hydration mismatch)
   const strips = useMemo(() => LETTERS.map((_, r) => Array.from({ length: STRIP }, (_, i) => SYMBOLS[(i * 5 + r * 3) % SYMBOLS.length])), []);
-  const all = landed >= LETTERS.length;
+  const all = landed >= LETTERS.length || (start && !!reduce);
 
   return (
     <div className="relative mx-auto flex items-center justify-center gap-[0.12em] text-[clamp(3.4rem,13vw,8.5rem)]" aria-label="RAVO">
@@ -43,21 +52,18 @@ export function SlotReels({ start }: { start: boolean }) {
               className="flex flex-col items-center"
               initial={{ y: 0, filter: "blur(0px)" }}
               animate={
-                start
-                  ? reduce
-                    ? { y: `-${STRIP * 1.15}em` }
-                    : { y: [0, `-${STRIP * 1.15}em`], filter: ["blur(0px)", "blur(3px)", "blur(3px)", "blur(0px)"] }
+                start && !reduce
+                  ? { y: [0, `-${(STRIP + 1) * 1.15}em`], filter: ["blur(0px)", "blur(3px)", "blur(3px)", "blur(0px)"] }
                   : { y: 0 }
               }
               transition={{ duration: reduce ? 0 : 1.1 + r * 0.38, delay: reduce ? 0 : 0.15, ease: [0.2, 0.8, 0.25, 1.06] }}
               onAnimationComplete={() => start && setLanded((n) => n + 1)}
             >
+              <Letter letter={letter} r={r} />
               {strips[r].map((s, i) => (
                 <span key={i} className="grid h-[1.15em] w-full place-items-center"><Symbol s={s} /></span>
               ))}
-              <span className="grid h-[1.15em] w-full place-items-center font-display leading-none">
-                <span className={r % 2 ? "neon-text" : "chrome"}>{letter}</span>
-              </span>
+              <Letter letter={letter} r={r} />
             </motion.div>
             {/* light sweep once every reel has landed */}
             {all && !reduce && (

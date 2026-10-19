@@ -15,15 +15,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.URL || SITE_URL),
   title: { default: `${SITE_NAME} · Leaderboard, Store & Raffles`, template: `%s · ${SITE_NAME}` },
   description: SITE_TAGLINE,
-  icons: { icon: "/icon.png" },
+  icons: { icon: "/ravo-icon.png", apple: "/apple-icon.png" },
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
     title: `${SITE_NAME} · Code RAVO50 for a $50 bonus`,
     description: SITE_TAGLINE,
-    images: [{ url: "/og-v3.jpg", width: 1200, height: 630, alt: "RAVONEVERSLEEPS: code RAVO50, $50 bonus on Qzino" }],
+    images: [{ url: "/og-v4.jpg", width: 1200, height: 630, alt: "RAVONEVERSLEEPS: code RAVO50, $50 bonus on Qzino" }],
   },
-  twitter: { card: "summary_large_image", images: ["/og-v3.jpg"] },
+  twitter: { card: "summary_large_image", images: ["/og-v4.jpg"] },
 };
 
 export const viewport: Viewport = { themeColor: "#040605" };

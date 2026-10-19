@@ -94,10 +94,10 @@ export function TopBar({ viewer, live }: { viewer: TopBarViewer | null; live: bo
         }`}
       >
         <Link href="/" className="group flex items-center gap-2.5" aria-label="RAVONEVERSLEEPS home">
-          <span className="relative block size-10 overflow-hidden rounded-full ring-2 ring-violet/60 transition group-hover:ring-neon group-hover:shadow-[0_0_22px_rgb(141_255_74/0.55)]">
-            <Image src="/media/pfp.webp" alt="" fill sizes="40px" className="object-cover transition duration-500 group-hover:scale-110" priority />
+          <span className="relative block size-10 overflow-hidden rounded-full ring-2 ring-neon/40 transition group-hover:ring-neon group-hover:shadow-[0_0_22px_rgb(141_255_74/0.55)]">
+            <Image src="/media/ravo-avatar.webp" alt="" fill sizes="40px" className="object-cover transition duration-500 group-hover:scale-110" priority />
           </span>
-          <span className="font-display text-[1.6rem] leading-none tracking-wide">
+          <span className="font-display text-[1.6rem] leading-none tracking-wide max-[359px]:hidden">
             <span className="chrome">RAVO</span>
           </span>
           <LiveBadge live={live} />

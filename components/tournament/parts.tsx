@@ -7,7 +7,7 @@ import type { KoMatch, KoParticipant, KoState } from "@/lib/knockout";
 
 // Tournament presentation shared by the admin dashboard, public page and OBS
 // overlay (logic ported from ONO). Player 1 is the neon side, player 2 the
-// violet side; usernames are public Kick chat handles.
+// chrome side; usernames are public Kick chat handles.
 
 /** Round names for a bracket of `size` players (client copy of lib/knockout). */
 export function roundName(size: number, round: number): string {
@@ -58,7 +58,7 @@ export function Counter({ value, max, open }: { value: number; max: number; open
 
 const SIDE = {
   l: { color: "var(--color-neon)", glow: "rgb(141 255 74 / 0.45)", text: "text-neon", anim: "ko-slide-l" },
-  r: { color: "var(--color-violet)", glow: "rgb(155 107 255 / 0.45)", text: "text-violet", anim: "ko-slide-r" },
+  r: { color: "var(--color-silver)", glow: "rgb(217 225 220 / 0.4)", text: "text-silver", anim: "ko-slide-r" },
 };
 
 function Fighter({ p, side, outcome, big, result, pending }: {
@@ -106,7 +106,7 @@ export function VsScreen({ match, size, big = false }: { match: KoMatch; size: n
   return (
     <div className="relative">
       {/* split arena glow */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_15%_40%,rgb(141_255_74/0.16),transparent_55%),radial-gradient(ellipse_at_85%_40%,rgb(155_107_255/0.18),transparent_55%)]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_15%_40%,rgb(141_255_74/0.16),transparent_55%),radial-gradient(ellipse_at_85%_40%,rgb(217_225_220/0.12),transparent_55%)]" />
       <p className="mb-5 text-center font-head text-xs font-bold uppercase tracking-[0.22em] text-muted">
         {matchLabel(match, size)}
         {match.status === "live" && <span className="ml-2 rounded-full bg-danger px-2 py-0.5 text-[10px] text-white">● Live</span>}
@@ -286,7 +286,7 @@ export function Bracket({ state }: { state: KoState }) {
 export function ChampionCard({ p, compact = false, celebrate = false }: { p: KoParticipant | null; compact?: boolean; celebrate?: boolean }) {
   const bursts = useMemo(() => Array.from({ length: celebrate ? 28 : 0 }, (_, i) => {
     const a = (i / 28) * Math.PI * 2;
-    return { bx: `${Math.cos(a) * (160 + (i % 4) * 40)}px`, by: `${Math.sin(a) * (120 + (i % 3) * 40)}px`, c: ["var(--color-gold)", "var(--color-neon)", "var(--color-violet)", "var(--color-neon-bright)"][i % 4], d: `${(i % 7) * 0.08}s` };
+    return { bx: `${Math.cos(a) * (160 + (i % 4) * 40)}px`, by: `${Math.sin(a) * (120 + (i % 3) * 40)}px`, c: ["var(--color-gold)", "var(--color-neon)", "var(--color-silver)", "var(--color-neon-bright)"][i % 4], d: `${(i % 7) * 0.08}s` };
   }), [celebrate]);
   if (!p) return <div className="w-full rounded-xl border border-dashed border-line p-4 text-center text-sm text-dim">To be crowned</div>;
   return (

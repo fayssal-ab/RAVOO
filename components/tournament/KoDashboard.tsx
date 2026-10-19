@@ -164,7 +164,7 @@ export function KoDashboard({ initial, overlayUrl }: { initial: KoState | null; 
 
           <div className="mt-8 flex flex-wrap justify-center gap-2">
             <button disabled={busy !== null || !canRoll} onClick={() => act("roll")} className="btn btn-neon btn-sm"><Dices className="size-4" /> Roll 2 players</button>
-            <button disabled={busy !== null || !state.pendingRoll} onClick={() => act("confirm")} className="btn btn-violet btn-sm">Confirm battle</button>
+            <button disabled={busy !== null || !state.pendingRoll} onClick={() => act("confirm")} className="btn btn-chrome btn-sm">Confirm battle</button>
             <button disabled={busy !== null || !state.pendingRoll} onClick={() => act("cancel_roll", {}, "Cancel this roll? Both players go back to the pool.")} className="btn btn-ghost btn-sm">Cancel roll</button>
             <button disabled={busy !== null || !!state.live || !!state.pendingRoll || !state.nextReady} onClick={() => act("start")} className="btn btn-neon btn-sm"><Play className="size-4" /> Start battle</button>
             <button disabled={busy !== null || !!state.live} onClick={() => act("next")} className="btn btn-ghost btn-sm"><SkipForward className="size-4" /> Next battle</button>
@@ -262,8 +262,8 @@ function BattleResultForm({ match, busy, onSubmit }: { match: KoMatch; busy: boo
   const m1 = multi(p1), m2 = multi(p2);
   const lead = m1 && m2 ? (Number(m1) > Number(m2) ? 1 : Number(m2) > Number(m1) ? 2 : 0) : null;
   const side = (n: 1 | 2, b: Bonus, set: (v: Bonus) => void, m: string | null) => (
-    <div className={`rounded-2xl border-2 p-3 ${lead === n ? "border-gold/70 bg-gold/10" : n === 1 ? "border-neon/30 bg-bg-2" : "border-violet/30 bg-bg-2"}`}>
-      <p className={`truncate font-head font-bold ${n === 1 ? "text-neon" : "text-violet"}`}>{(n === 1 ? match.p1 : match.p2)?.username ?? `Player ${n}`}</p>
+    <div className={`rounded-2xl border-2 p-3 ${lead === n ? "border-gold/70 bg-gold/10" : n === 1 ? "border-neon/30 bg-bg-2" : "border-silver/30 bg-bg-2"}`}>
+      <p className={`truncate font-head font-bold ${n === 1 ? "text-neon" : "text-silver"}`}>{(n === 1 ? match.p1 : match.p2)?.username ?? `Player ${n}`}</p>
       <div className="mt-2 grid grid-cols-2 gap-2">
         <label className="block"><span className="label">Bonus cost ($)</span>
           <input inputMode="decimal" value={b.cost} onChange={(e) => set({ ...b, cost: e.target.value.trim() })} placeholder="100" className="field text-right font-mono" />

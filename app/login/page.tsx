@@ -16,7 +16,7 @@ export default async function LoginPage() {
       <main className="grid min-h-dvh place-items-center px-4">
         <div className="panel neon-frame is-on w-full max-w-sm p-8">
           <div className="flex flex-col items-center text-center">
-            <Image src="/media/pfp.webp" alt="" width={72} height={72} className="rounded-full ring-2 ring-neon/50" />
+            <Image src="/media/ravo-avatar.webp" alt="" width={72} height={72} className="rounded-full ring-2 ring-neon/50" />
             <h1 className="mt-4 font-display text-4xl"><span className="chrome">Control</span> <span className="neon-text">room</span></h1>
           </div>
           <LoginForm />

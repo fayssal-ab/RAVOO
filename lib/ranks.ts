@@ -21,9 +21,9 @@ export const TIERS: Tier[] = [
   { name: "Restless", from: 6, color: "#b08d57", glow: "rgba(176,141,87,.4)" },
   { name: "Night Owl", from: 11, color: "#c0c7cf", glow: "rgba(192,199,207,.4)" },
   { name: "Insomniac", from: 16, color: "#e7c25a", glow: "rgba(231,194,90,.45)" },
-  { name: "Midnight", from: 21, color: "#5ad7ff", glow: "rgba(90,215,255,.45)" },
-  { name: "Nocturnal", from: 26, color: "#6f8bff", glow: "rgba(111,139,255,.5)" },
-  { name: "Sleepless", from: 31, color: "#b07bff", glow: "rgba(176,123,255,.5)" },
+  { name: "Midnight", from: 21, color: "#e3ebe6", glow: "rgba(227,235,230,.45)" },
+  { name: "Nocturnal", from: 26, color: "#2fbf71", glow: "rgba(47,191,113,.5)" },
+  { name: "Sleepless", from: 31, color: "#74e6a8", glow: "rgba(116,230,168,.5)" },
   { name: "Never Sleeps", from: 36, color: "#7dff3a", glow: "rgba(125,255,58,.55)" },
 ];
 

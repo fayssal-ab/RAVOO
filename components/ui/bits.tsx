@@ -22,7 +22,7 @@ export function EmptyState({ title, children, action }: { title: string; childre
     <div className="panel scanlines relative overflow-hidden px-6 py-14 text-center">
       <div className="relative mx-auto h-40 w-36">
         <div className="absolute inset-4 rounded-full bg-neon/20 blur-2xl" />
-        <Image src="/media/pug-mascot.webp" alt="" fill sizes="144px" className="animate-dance object-contain" />
+        <Image src="/media/ravo-mascot.webp" alt="" fill sizes="144px" className="animate-dance object-contain" />
       </div>
       <p className="mt-6 font-display text-3xl"><span className="chrome">{title}</span></p>
       {children && <div className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted">{children}</div>}

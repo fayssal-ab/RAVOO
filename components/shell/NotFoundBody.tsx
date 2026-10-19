@@ -9,7 +9,7 @@ export function NotFoundBody() {
     <div className="mx-auto max-w-3xl px-4 pb-10 pt-6 text-center sm:px-6">
       <div className="relative mx-auto h-56 w-52">
         <div className="absolute inset-6 rounded-full bg-neon/20 blur-3xl" />
-        <Image src="/media/pug-mascot.webp" alt="" fill sizes="208px" className="animate-dance object-contain" priority />
+        <Image src="/media/ravo-mascot.webp" alt="" fill sizes="208px" className="animate-dance object-contain" priority />
       </div>
       <p className="mt-2 font-display text-[clamp(5rem,20vw,9rem)] leading-none"><span className="chrome">4</span><span className="neon-text">0</span><span className="chrome">4</span></p>
       <h1 className="mt-2 font-display text-4xl"><span className="chrome">Lost in</span> <span className="neon-text">the dream</span></h1>

@@ -26,7 +26,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <div className="panel neon-frame is-on relative overflow-hidden p-8 text-center">
           <div className="relative mx-auto h-36 w-32">
             <div className="absolute inset-4 rounded-full bg-neon/25 blur-2xl" />
-            <Image src="/media/pug-mascot.webp" alt="" fill sizes="128px" className="animate-dance object-contain" />
+            <Image src="/media/ravo-mascot.webp" alt="" fill sizes="128px" className="animate-dance object-contain" />
           </div>
           <h1 className="mt-6 font-display text-5xl"><span className="chrome">Sign</span> <span className="neon-text">in</span></h1>
           <p className="mx-auto mt-3 max-w-sm text-sm text-muted">Track your points and rank, redeem rewards in the store and join raffles.</p>
