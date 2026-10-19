@@ -13,6 +13,8 @@ export const READY_EVENT = "ravo:ready";
 
 export function announceReady() {
   window.__ravoReady = true;
+  // starts the CSS hero intro (.ravo-ready .hero-intro in globals.css)
+  document.documentElement.classList.add("ravo-ready");
   window.dispatchEvent(new Event(READY_EVENT));
 }
 

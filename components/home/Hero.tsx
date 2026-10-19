@@ -46,9 +46,9 @@ export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string;
               peeks, holds, then pulls himself up (clipped at the reels' edge) */}
           <div className="absolute inset-x-[-15%] -top-[25%] bottom-0 overflow-hidden">
             <motion.div
-              className="hero-intro absolute inset-x-[13%] bottom-0 top-[20%]"
-              initial={false}
-              animate={ready ? (reduce ? { opacity: 1 } : { opacity: [0, 1, 1, 1], y: ["110%", "62%", "66%", "0%"] }) : undefined}
+              className="absolute inset-x-[13%] bottom-0 top-[20%]"
+              initial={{ y: "110%" }}
+              animate={ready ? { y: reduce ? "0%" : ["110%", "62%", "66%", "0%"] } : undefined}
               transition={{ delay: reduce ? 0 : CLIMB_AT, duration: reduce ? 0 : 1.25, times: [0, 0.32, 0.5, 1], ease: [0.3, 0.8, 0.3, 1.1] }}
             >
               <Image src="/media/ravo-mascot.webp" alt="Ravo the pug" fill priority sizes="288px" className="animate-dance object-contain drop-shadow-[0_20px_40px_rgb(0_0_0/0.6)]" />
@@ -77,51 +77,42 @@ export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string;
           </span>
           <span className="mt-3 block text-[clamp(1.9rem,7vw,5rem)]" aria-label="never sleeps">
             {TITLE.map((ch, i) => (
-              <motion.span
-                key={i}
-                aria-hidden
-                className="hero-intro neon-text inline-block"
-                initial={false}
-                animate={ready ? (reduce ? { opacity: 1 } : { opacity: [0, 1], y: [-50, 0] }) : undefined}
-                transition={{ delay: reduce ? 0 : 1 + i * 0.04, type: "spring", stiffness: 300, damping: 14 }}
-              >
+              <span key={i} aria-hidden className="hero-intro hero-drop neon-text inline-block" style={{ "--d": `${1 + i * 0.04}s` } as React.CSSProperties}>
                 {ch}
-              </motion.span>
+              </span>
             ))}
           </span>
         </h1>
 
-        <motion.p initial={false} animate={ready ? { opacity: [0, 1] } : undefined} transition={{ delay: reduce ? 0 : 0.35 }} className="hero-intro mx-auto mt-6 max-w-xl text-base text-text/80 sm:text-lg">
+        <p style={{ "--d": "0.35s" } as React.CSSProperties} className="hero-intro mx-auto mt-6 max-w-xl text-base text-text/80 sm:text-lg">
           Play on Qzino with code <span className="font-mono font-bold text-neon">{code}</span> for a <b>$50 bonus</b>, monthly wager leaderboards,
           milestones and a points store that pays you back.
-        </motion.p>
+        </p>
 
-        <motion.div initial={false} animate={ready ? (reduce ? { opacity: 1 } : { opacity: [0, 1], y: [16, 0] }) : undefined} transition={{ delay: reduce ? 0 : 0.5 }} className="hero-intro mt-8 flex flex-col items-center gap-4 sm:flex-row">
+        <div style={{ "--d": "0.5s" } as React.CSSProperties} className="hero-intro mt-8 flex flex-col items-center gap-4 sm:flex-row">
           <a href={qzinoUrl} target="_blank" rel="noopener noreferrer sponsored" className="btn btn-neon px-7 py-4 text-base">
             Play on Qzino <ArrowRight className="size-5" />
           </a>
           <CopyCode code={code} size="lg" />
-        </motion.div>
+        </div>
 
-        <motion.a
+        <a
           href={qzinoUrl}
           target="_blank"
           rel="noopener noreferrer sponsored"
-          initial={false}
-          animate={ready ? { opacity: [0, 1] } : undefined}
-          transition={{ delay: reduce ? 0 : 0.65 }}
+          style={{ "--d": "0.65s" } as React.CSSProperties}
           className="hero-intro mt-6 inline-flex items-center gap-3 rounded-full border border-line-hot bg-black/40 px-4 py-2 backdrop-blur transition hover:border-neon"
         >
           <span className="font-pixel text-[0.65rem] uppercase tracking-[0.2em] text-muted">Official partner</span>
           <QzinoLogo className="h-6 w-auto" />
-        </motion.a>
+        </a>
 
-        <motion.div initial={false} animate={ready ? { opacity: [0, 1] } : undefined} transition={{ delay: reduce ? 0 : 0.75 }} className="hero-intro mt-6">
+        <div style={{ "--d": "0.75s" } as React.CSSProperties} className="hero-intro mt-6">
           <Link href="/leaderboard" className="inline-flex items-center gap-2 font-head text-sm font-semibold uppercase tracking-[0.2em] text-text/70 transition hover:text-neon">
             <Trophy className="size-4 text-gold" />
             {pool ? <>{pool} monthly leaderboard · view</> : <>View the leaderboard</>}
           </Link>
-        </motion.div>
+        </div>
       </div>
 
       {/* slime dripping into the page */}
