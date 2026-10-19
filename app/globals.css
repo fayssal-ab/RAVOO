@@ -24,7 +24,7 @@
   --color-bronze: #e09a5c;
   --color-text: #e9f5ec;
   --color-muted: #9fb3a5;
-  --color-dim: #5e7064;
+  --color-dim: #7a8c80; /* ≥ 5:1 on every surface (WCAG AA) */
   --color-danger: #ff5f6d;
 
   /* next/font exposes each Google font as an --nf-* variable (app/layout.tsx) */
