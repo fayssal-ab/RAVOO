@@ -75,18 +75,21 @@ export function SlotReels({ start }: { start: boolean }) {
       {/* payline */}
       <div className={`pointer-events-none absolute inset-x-[-0.2em] top-1/2 h-[0.02em] -translate-y-1/2 bg-neon transition-opacity duration-500 ${all ? "opacity-70 shadow-[0_0_0.2em_var(--color-neon)]" : "opacity-0"}`} />
 
-      {/* lever */}
-      <div className="absolute -right-[0.5em] top-[0.05em] hidden h-[1.1em] w-[0.18em] sm:block" aria-hidden>
-        <motion.div
-          className="absolute bottom-0 left-1/2 w-[0.05em] -translate-x-1/2 origin-bottom rounded-full bg-[linear-gradient(90deg,#7f8c85,#f4fff0,#7f8c85)]"
-          style={{ height: "0.85em" }}
-          initial={{ scaleY: 1 }}
-          animate={start && !reduce ? { scaleY: [1, 0.35, 1] } : { scaleY: 1 }}
-          transition={{ duration: 0.7, times: [0, 0.35, 1], ease: "easeInOut" }}
+      {/* lever: chrome housing on the side, thick arm, glowing ball; pulled when the reels start */}
+      <div className="absolute -right-[0.5em] top-[0.05em] h-[1.05em] w-[0.4em]" aria-hidden>
+        {/* housing */}
+        <span className="absolute bottom-0 left-0 block h-[0.5em] w-[0.27em] rounded-r-[0.1em] bg-[linear-gradient(180deg,#f4fff0,#7f8c85_40%,#3c5a40)] shadow-[0_0.04em_0.12em_rgb(0_0_0/0.8)]" />
+        <span className="absolute bottom-[0.17em] left-[0.085em] block size-[0.12em] rounded-full bg-[#040605] ring-[0.015em] ring-neon/60" />
+        {/* arm + ball */}
+        <motion.span
+          className="absolute bottom-[0.22em] left-[0.11em] block w-[0.09em] origin-bottom rounded-full bg-[linear-gradient(90deg,#7f8c85,#f4fff0_45%,#7f8c85)]"
+          style={{ height: "0.8em" }}
+          initial={{ scaleY: 1, rotate: 0 }}
+          animate={start && !reduce ? { scaleY: [1, -0.15, -0.15, 1], rotate: [0, 6, 6, 0] } : { scaleY: 1, rotate: 0 }}
+          transition={{ duration: 0.85, times: [0, 0.3, 0.45, 1], ease: "easeInOut" }}
         >
-          <span className="absolute -top-[0.09em] left-1/2 block size-[0.16em] -translate-x-1/2 rounded-full bg-neon shadow-[0_0_0.2em_var(--color-neon)]" />
-        </motion.div>
-        <span className="absolute bottom-0 left-1/2 block h-[0.14em] w-[0.16em] -translate-x-1/2 rounded-[0.04em] bg-[linear-gradient(180deg,#dfe7e2,#3c5a40)]" />
+          <span className="absolute -top-[0.17em] left-1/2 block size-[0.3em] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_35%_30%,#e9ffd6,#8dff4a_45%,#2e7d12)] shadow-[0_0_0.25em_var(--color-neon)]" />
+        </motion.span>
       </div>
     </div>
   );

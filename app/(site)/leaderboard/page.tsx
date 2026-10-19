@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ReelNumber } from "@/components/fx/ReelNumber";
 import { BoardExplorer, Podium } from "@/components/leaderboard/Board";
 import { EmptyState } from "@/components/ui/bits";
 import { CopyCode } from "@/components/ui/CopyCode";
-import { Countdown, CountUp, Reveal, Stagger } from "@/components/ui/motion";
+import { Countdown, Reveal, Stagger } from "@/components/ui/motion";
 import { QZINO_CODE, QZINO_URL } from "@/lib/constants";
 import { getBoard } from "@/lib/leaderboard";
 import { formatMoney } from "@/lib/money";
@@ -53,7 +54,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
           {/* prize headline */}
           <header className="pb-10 pt-4 text-center">
             <p className="font-mono text-6xl font-bold text-gold drop-shadow-[0_0_30px_rgb(255_215_106/0.35)] sm:text-8xl">
-              <CountUp value={Number(period.prize_pool)} prefix="$" decimals={2} />
+              <ReelNumber value={formatMoney(period.prize_pool)} />
             </p>
             <h1 className="mt-2 font-display text-3xl sm:text-4xl"><span className="chrome">{period.title}</span></h1>
             {period.state === "live" && <p className="eyebrow mt-3">● Live</p>}

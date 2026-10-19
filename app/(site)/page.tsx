@@ -3,6 +3,7 @@ import { QzinoLogo } from "@/components/ui/QzinoLogo";
 import Link from "next/link";
 import { ArrowRight, Coins, Gift, Timer } from "lucide-react";
 import { Hero } from "@/components/home/Hero";
+import { ReelNumber } from "@/components/fx/ReelNumber";
 import { PromoSteps } from "@/components/promo/PromoSteps";
 import { StreamBox } from "@/components/stream/StreamBox";
 import { Ticker } from "@/components/home/Ticker";
@@ -10,7 +11,7 @@ import { Paw } from "@/components/decor/shapes";
 import { ItemCard } from "@/components/store/ItemCard";
 import { SectionTitle } from "@/components/ui/bits";
 import { CopyCode } from "@/components/ui/CopyCode";
-import { CountUp, Reveal, SpotlightCard, Stagger } from "@/components/ui/motion";
+import { Reveal, SpotlightCard, Stagger } from "@/components/ui/motion";
 import { SocialIcon } from "@/components/ui/SocialIcon";
 import { getRanks } from "@/lib/account";
 import { DISCORD_URL, KICK_URL, QZINO_CODE, QZINO_PERKS, QZINO_URL, X_URL } from "@/lib/constants";
@@ -98,7 +99,7 @@ export default async function HomePage() {
               <div>
                 <p className="eyebrow !text-neon-bright">Monthly leaderboard</p>
                 <p className="mt-2 font-mono text-5xl font-bold text-gold drop-shadow-[0_0_20px_rgb(255_215_106/0.35)] sm:text-6xl">
-                  {period ? <CountUp value={Number(period.prize_pool)} prefix="$" decimals={2} /> : "Soon"}
+                  {period ? <ReelNumber value={formatMoney(period.prize_pool)} /> : "Soon"}
                 </p>
                 <p className="mt-2 flex items-center gap-2 font-head text-lg font-bold">
                   <Timer className="size-5 text-neon" />
