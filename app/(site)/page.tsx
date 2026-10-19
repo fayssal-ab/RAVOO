@@ -61,7 +61,7 @@ export default async function HomePage() {
                   Play under code <span className="neon-text font-mono">{QZINO_CODE}</span> for exclusive leaderboards, milestones,
                   raffles and a <span className="text-neon">$50 welcome bonus</span>.
                 </h2>
-                <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5">
+                <div className="mt-6 grid grid-cols-3 gap-2">
                   {QZINO_PERKS.map((p) => (
                     <div key={p.label} className="rounded-2xl border border-line bg-bg/60 px-3 py-3 text-center">
                       <p className="font-mono text-lg font-bold text-neon">{p.value}</p>
@@ -139,7 +139,7 @@ export default async function HomePage() {
       </section>
 
       <div className="mt-24 overflow-hidden py-4">
-        <Ticker items={[`Code ${QZINO_CODE}`, "$50 bonus on Qzino", "Up to 40% cashback", "Monthly leaderboard", "Wager milestones", "Points store", "Ravo never sleeps"]} />
+        <Ticker items={[`Code ${QZINO_CODE}`, "$50 bonus on Qzino", "Monthly leaderboard", "Wager milestones", "Points store", "Ravo never sleeps"]} />
       </div>
 
       {/* milestones teaser */}

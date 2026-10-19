@@ -7,13 +7,15 @@ export const SITE_TAGLINE = "Play on Qzino with code RAVO50. Climb the monthly l
 
 export const QZINO_CODE = process.env.NEXT_PUBLIC_QZINO_CODE || "RAVO50";
 export const QZINO_URL = process.env.NEXT_PUBLIC_QZINO_URL || "https://qzino-partners.com/trdj40jfb";
-/** What the code gets you on Qzino (from Ravo's Kick panel). */
+/**
+ * What the code gets you. Only claims that are confirmed: Ravo's Kick panel
+ * also lists "up to 40% cashback, 15% rakeback, instant payouts, non-strict
+ * KYC"; those stay off the site until they're re-checked with Qzino.
+ */
 export const QZINO_PERKS = [
-  { value: "$50", label: "Exclusive bonus" },
-  { value: "40%", label: "Cashback up to" },
-  { value: "15%", label: "Rakeback up to" },
-  { value: "Instant", label: "Payouts" },
-  { value: "Non-strict", label: "KYC" },
+  { value: "$50", label: "Bonus with the code" },
+  { value: "Monthly", label: "Leaderboard prizes" },
+  { value: "Cashback", label: "& rakeback on Qzino" },
 ] as const;
 
 export const KICK_CHANNEL = process.env.NEXT_PUBLIC_KICK_CHANNEL || "ravoneversleeps";

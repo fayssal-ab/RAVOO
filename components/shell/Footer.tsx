@@ -43,7 +43,7 @@ export function Footer() {
             <div>
               <p className="flex items-center gap-2"><QzinoLogo className="h-6 w-auto" /><span className="eyebrow">exclusive</span></p>
               <p className="mt-1 font-head text-xl font-bold">
-                Use code <span className="font-mono text-neon">{QZINO_CODE}</span> for a $50 bonus, up to 40% cashback & 15% rakeback.
+                Use code <span className="font-mono text-neon">{QZINO_CODE}</span> for a $50 bonus. 18+, terms apply on Qzino.
               </p>
             </div>
             <a href={QZINO_URL} target="_blank" rel="noopener noreferrer sponsored" className="btn btn-neon shrink-0">Claim on Qzino</a>

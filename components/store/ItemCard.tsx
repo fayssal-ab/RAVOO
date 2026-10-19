@@ -28,18 +28,32 @@ function artFor(item: ItemView): string {
 /** Store item card. `locked` greys it out behind the rank requirement. */
 export function ItemCard({ item, locked, action }: { item: ItemView; locked: boolean; action?: ReactNode }) {
   const tier = tierFor(item.min_rank);
+  // dollar value shown on tip / bonus buy cards ("$20 Qzino tip" → "$20")
+  const value = item.kind === "cash" || item.kind === "bonus" ? item.name.match(/\$\d[\d,]*/)?.[0] ?? null : null;
   return (
     <SpotlightCard className={`panel neon-frame group flex h-full flex-col overflow-hidden ${locked ? "" : "hover:border-line-hot"}`}>
       {/* product art, tinted toward the tier colour */}
       <div className="relative h-40 overflow-hidden border-b border-line bg-black">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={artFor(item)}
-          alt=""
-          loading="lazy"
-          draggable={false}
-          className={`size-full object-cover transition duration-700 group-hover:scale-110 ${locked ? "opacity-50 grayscale" : ""}`}
-        />
+        {value ? (
+          /* "gift card": the reward's dollar value in chrome over the hero's spikes */
+          <div className={`relative size-full transition duration-700 group-hover:scale-105 ${locked ? "opacity-50 grayscale" : ""}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/media/hero/bg.webp" alt="" loading="lazy" draggable={false} className="absolute inset-0 size-full object-cover object-[50%_30%] opacity-70" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_55%,rgb(4_10_5/0.15),rgb(4_10_5/0.75)_75%)]" />
+            <div className="relative grid size-full place-items-center">
+              <span className="chrome font-display text-6xl leading-none drop-shadow-[0_6px_18px_rgb(0_0_0/0.8)]">{value}</span>
+            </div>
+          </div>
+        ) : (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={artFor(item)}
+            alt=""
+            loading="lazy"
+            draggable={false}
+            className={`size-full object-cover transition duration-700 group-hover:scale-110 ${locked ? "opacity-50 grayscale" : ""}`}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent" />
         {item.min_rank > 1 && <div className="absolute inset-x-0 bottom-0 h-1/2 mix-blend-color opacity-50" style={{ background: `linear-gradient(0deg, ${tier.color}, transparent)` }} />}
         {item.min_rank > 1 && <div className="absolute left-3 top-3"><RankBadge level={item.min_rank} compact /></div>}
