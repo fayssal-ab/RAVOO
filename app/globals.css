@@ -363,15 +363,6 @@ iframe[src*=".netlify/scripts/hud"],
 .zzz-pop { animation: zzz-pop 0.5s var(--ease-out-expo) forwards; }
 .zzz-shard { animation: zzz-shard 0.65s ease-out forwards; }
 
-/* paw-print mouse trail (components/fx/PawTrail.tsx) */
-.paw-print { position: absolute; left: 0; top: 0; color: var(--color-neon); opacity: 0; filter: drop-shadow(0 0 6px rgb(141 255 74 / 0.8)); }
-.paw-step { animation: paw-step 1.1s ease-out forwards; }
-@keyframes paw-step {
-  0% { opacity: 0; scale: 1.4; }
-  12% { opacity: 0.75; scale: 1; }
-  100% { opacity: 0; scale: 0.85; }
-}
-
 /* insomnia easter egg (components/fx/Insomnia.tsx) */
 .zzz-rise { animation: zzz-rise 7s ease-in infinite; opacity: 0; text-shadow: 0 0 14px rgb(141 255 74 / 0.6); }
 @keyframes zzz-rise {
@@ -392,9 +383,4 @@ iframe[src*=".netlify/scripts/hud"],
 .reel-digit > span { display: flex; flex-direction: column; }
 .reel-digit > span > span { height: 1em; }
 
-/* chip rain (components/fx/CodeEgg.tsx) */
-.chip-fall { animation: chip-fall var(--d, 2.4s) cubic-bezier(.3,.1,.6,1) forwards; }
-@keyframes chip-fall {
-  0% { transform: translate3d(0, -15vh, 0) rotate(0deg); opacity: 1; }
-  100% { transform: translate3d(var(--dx, 0), 115vh, 0) rotate(var(--r, 540deg)); opacity: 1; }
-}
+

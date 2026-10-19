@@ -10,7 +10,9 @@ const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["500", "700"], variab
 const pixel = Pixelify_Sans({ subsets: ["latin"], variable: "--nf-pixel", display: "swap" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  // Netlify sets URL to the site's primary address at build time, so the
+  // share image stays absolute and correct even if the domain changes.
+  metadataBase: new URL(process.env.URL || SITE_URL),
   title: { default: `${SITE_NAME} · Leaderboard, Store & Raffles`, template: `%s · ${SITE_NAME}` },
   description: SITE_TAGLINE,
   icons: { icon: "/icon.png" },
