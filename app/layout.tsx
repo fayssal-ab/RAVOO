@@ -19,9 +19,9 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} · Code RAVO50 for a $50 bonus`,
     description: SITE_TAGLINE,
-    images: [{ url: "/og-v2.jpg", width: 1200, height: 630, alt: "RAVONEVERSLEEPS: code RAVO50, $50 bonus on Qzino" }],
+    images: [{ url: "/og-v3.jpg", width: 1200, height: 630, alt: "RAVONEVERSLEEPS: code RAVO50, $50 bonus on Qzino" }],
   },
-  twitter: { card: "summary_large_image", images: ["/og-v2.jpg"] },
+  twitter: { card: "summary_large_image", images: ["/og-v3.jpg"] },
 };
 
 export const viewport: Viewport = { themeColor: "#040605" };

@@ -95,12 +95,12 @@ export function Hero({ code, qzinoUrl, pool }: { code: string; qzinoUrl: string;
                 key={side}
                 aria-hidden
                 className="absolute top-0 z-20 block"
-                style={{ left: `calc(50% + ${side} * clamp(2.2rem, 9vw, 5.6rem) - clamp(1.4rem, 4.25vw, 2.2rem))` }}
-                initial={{ y: 24, opacity: 0, scale: 0.6, rotate: side * 12 }}
-                animate={ready ? { y: [24, -14, -10, -14, -10, -18], opacity: [0, 1, 1, 1, 1, 0], scale: [0.6, 1, 1, 1, 1, 0.9], rotate: side * 12 } : undefined}
+                style={{ left: `calc(50% + ${side} * clamp(2.2rem, 9vw, 5.6rem) - clamp(0.95rem, 3.5vw, 2.2rem))` }}
+                initial={{ y: "30%", opacity: 0, scale: 0.6, rotate: side * 12 }}
+                animate={ready ? { y: ["30%", "-72%", "-62%", "-72%", "-62%", "-90%"], opacity: [0, 1, 1, 1, 1, 0], scale: [0.6, 1, 1, 1, 1, 0.9], rotate: side * 12 } : undefined}
                 transition={{ delay: CLIMB_AT - 0.45, duration: 1.6, times: [0, 0.18, 0.32, 0.46, 0.6, 1] }}
               >
-                <Paw className="size-[clamp(2.8rem,8.5vw,4.4rem)] text-[#2b1d16] drop-shadow-[0_3px_0_#120c09]" />
+                <Paw className="size-[clamp(1.9rem,7vw,4.4rem)] text-[#2b1d16] drop-shadow-[0_3px_0_#120c09]" />
               </motion.span>
             ))}
           </span>
